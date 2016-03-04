@@ -24,6 +24,8 @@ module KIdentityHash = struct
   let hash = Hashtbl.hash_param 1000 1000
 end
 
+type step_function = StepFunc of (k -> (k * step_function))
+
 module KIdentityHashtbl = Hashtbl.Make(KIdentityHash)
 
 module GuardElt = struct

@@ -23,16 +23,16 @@ let context_switch (config: k) (thread_id: k) : k = match config with
   if (K.compare old_thread_id thread_id) = 0 then config else
   [Thread(global,thread_id,(KMap.find thread_id other_threads),[Map(sort,lbl,(KMap.remove thread_id (KMap.add old_thread_id old_thread other_threads)))])]
 
-let rec take_steps (hint: klabel option) (active_threads: k list) (config: k) (depth: int) (n: int) (last_resort: bool) : k * int =
+let rec take_steps (step_function: k -> (k * step_function)) (active_threads: k list) (config: k) (depth: int) (n: int) (last_resort: bool) : k * int =
   if n = depth then (
     config,n
   ) else (
     match active_threads with
     | thread :: other_active_threads ->
     let active_config = context_switch config thread in
-      match (try Some (step active_config hint) with Stuck _ -> None) with
-      | Some (([Thread(_,thread_id,_,[Map(_,_,other_threads)])] as config),hint) -> (
-        take_steps hint (thread_id :: other_active_threads) config depth (n+1) false
+      match (try Some (step_function active_config) with Stuck _ -> None) with
+      | Some (([Thread(_,thread_id,_,[Map(_,_,other_threads)])] as config),(StepFunc step_function)) -> (
+        take_steps step_function (thread_id :: other_active_threads) config depth (n+1) false
       )
       | None -> (
         match active_config with [Thread(_,thread_id,_,[Map(_,_,other_threads)])] ->
@@ -41,10 +41,10 @@ let rec take_steps (hint: klabel option) (active_threads: k list) (config: k) (d
             active_config,n
           ) else (
             let (other_thread_ids,_) = List.split(KMap.bindings other_threads) in
-            take_steps None (thread_id :: other_thread_ids) active_config depth n true
+            take_steps step (thread_id :: other_thread_ids) active_config depth n true
           )
         ) else (
-          take_steps None other_active_threads active_config depth n last_resort
+          take_steps step other_active_threads active_config depth n last_resort
         )
       )
   )
@@ -52,5 +52,5 @@ let rec take_steps (hint: klabel option) (active_threads: k list) (config: k) (d
 
 let run (config: k) (depth: int) : k * int =
   let first_config, first_thread_ids = split_config config in
-  let last_config,n = take_steps None first_thread_ids first_config depth 0 false in
+  let last_config,n = take_steps step first_thread_ids first_config depth 0 false in
   (plug_config last_config, n)

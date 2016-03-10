@@ -6,6 +6,9 @@ module KSet = Set.Make(K)
 open Constants.K
 type k = K.t
 
+(* this is needed so that statically linked binary will contain this module that is needed by dynamically linked realdef *)
+let _ = Gc.stat
+
 exception Stuck of k
 exception Not_implemented
 

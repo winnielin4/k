@@ -17,5 +17,6 @@ let get () : (module Definition) =
   | None -> failwith "Definition not loaded"
 
 let load (path: string) : unit =
+  let () = Dynlink.allow_unsafe_modules true in
   let filename = Dynlink.adapt_filename (path) in
   Dynlink.loadfile filename

@@ -41,7 +41,10 @@ public class KProve {
     private final KExceptionManager kem;
     private final Stopwatch sw;
     private final FileUtil files;
-    private final KPrint kprint;
+    private static KPrint kprint;
+    private static Tuple2<Definition, Module> compiled;
+    private static CompiledDefinition compiledDefinition;
+
 
     @Inject
     public KProve(KExceptionManager kem, Stopwatch sw, FileUtil files, KPrint kprint) {
@@ -52,7 +55,8 @@ public class KProve {
     }
 
     public int run(KProveOptions options, CompiledDefinition compiledDefinition, Backend backend, Function<Module, Rewriter> rewriterGenerator) {
-        Tuple2<Definition, Module> compiled = getProofDefinition(options.specFile(files), options.defModule, options.specModule, compiledDefinition, backend, options.global, files, kem, sw);
+        compiled = getProofDefinition(options.specFile(files), options.defModule, options.specModule, compiledDefinition, backend, options.global, files, kem, sw);
+        KProve.compiledDefinition = compiledDefinition;
         Rewriter rewriter = rewriterGenerator.apply(compiled._1().mainModule());
         Module specModule = compiled._2();
 
@@ -64,8 +68,18 @@ public class KProve {
         } else {
             exit = 1;
         }
-        kprint.prettyPrint(compiled._1(), compiled._1().getModule("LANGUAGE-PARSING").get(), compiledDefinition.kompileOptions, s -> kprint.outputFile(s), results);
+        //kprint.prettyPrint(compiled._1(), compiled._1().getModule("LANGUAGE-PARSING").get(), compiledDefinition.kompileOptions, s -> kprint.outputFile(s), results);
         return exit;
+    }
+
+    public static void prettyPrint(K results) {
+        Option<Module> module = compiled._1().getModule("LANGUAGE-PARSING");
+        kprint.prettyPrint(
+                compiled._1(),
+                module.get(),
+                compiledDefinition.kompileOptions,
+                s -> kprint.outputFile(s),
+                results);
     }
 
     private static Module getModule(String defModule, Map<String, Module> modules, Definition oldDef) {

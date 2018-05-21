@@ -626,6 +626,7 @@ struct
     let fd = Unix.descr_of_out_channel out_chan in
     Unix.lockf fd Unix.F_LOCK 0;
     output_string out_chan (Buffer.contents txt);
+    Buffer.clear txt;
     close_out out_chan
 
   let flush_logs () =

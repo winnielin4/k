@@ -20,7 +20,9 @@ let plug_config (config: k) : k =
   Def.set_thread_set global thread_set
   | _ -> config
 
-let context_switch (config: k) (thread_id: k) : k = match config with
+let context_switch (config: k) (thread_id: k) : k =
+Prelude.IO.flush_logs ();
+match config with
   [Thread(global,old_thread_id,old_thread,[Map(sort,lbl,other_threads)])] ->
   if (K.compare old_thread_id thread_id) = 0 then config else
   [Thread(global,thread_id,(KMap.find thread_id other_threads),[Map(sort,lbl,(KMap.remove thread_id (KMap.add old_thread_id old_thread other_threads)))])]
@@ -75,6 +77,8 @@ let rec take_steps (module Def: Plugin.Definition) (step_function: k -> (k * ste
   )
 
 let rec take_steps_no_thread (module Def: Plugin.Definition) (step_function: k -> (k * step_function)) (config: k) (depth: int) (n: int) : k * int =
+  if n land 4095 = 0 then
+    Prelude.IO.flush_logs ();
   if n = depth then (
     (config, n)
   ) else (
@@ -97,7 +101,6 @@ let rec strat_run (module Def: Plugin.Definition) (config: k) (depth: int) (n: i
 let run (config: k) (depth: int) : k * int =
   let module Def = (val Plugin.get () : Plugin.Definition) in
   let result = strat_run (module Def) config depth 0 in
-  Prelude.IO.flush_logs ();
   result
 
 let rec strat_run_no_thread_opt (module Def: Plugin.Definition) (config: k) (depth: int) (n: int) : k * int =

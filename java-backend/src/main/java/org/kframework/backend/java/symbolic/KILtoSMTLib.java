@@ -3,6 +3,7 @@ package org.kframework.backend.java.symbolic;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -118,8 +119,6 @@ public class    KILtoSMTLib extends CopyOnWriteTransformer {
             "bv2int",
             /* bit vector extras */
             "mint_signed_of_unsigned",
-            /* big numbers */
-            "pow256",
             /* string theory */
             "string_lt",
             "string_le",
@@ -172,6 +171,22 @@ public class    KILtoSMTLib extends CopyOnWriteTransformer {
             "smt_seq_filter",
             /* bool2int */
             "smt_bool2int");
+
+    public static final ImmutableMap<BigInteger, String> bigNumbers = ImmutableMap.<BigInteger, String>builder()
+            .put(new BigInteger( "115792089237316195423570985008687907853269984665640564039457584007913129639936"), "pow256"         )  /*   2^256      */
+            .put(new BigInteger(  "57896044618658097711785492504343953926634992332820282019728792003956564819968"), "pow255"         )  /*   2^255      */
+            .put(new BigInteger(                              "1461501637330902918203684832716283019655932542976"), "pow160"         )  /*   2^160      */
+            .put(new BigInteger(                                       "-170141183460469231731687303715884105728"), "minSInt128"     )  /*  -2^127      */
+            .put(new BigInteger(                                        "170141183460469231731687303715884105727"), "maxSInt128"     )  /*   2^127 - 1  */
+            .put(new BigInteger(                             "-1701411834604692317316873037158841057280000000000"), "minSFixed128x10")  /* (-2^127    ) * 10^10 */
+            .put(new BigInteger(                              "1701411834604692317316873037158841057270000000000"), "maxSFixed128x10")  /* ( 2^127 - 1) * 10^10 */
+            .put(new BigInteger( "-57896044618658097711785492504343953926634992332820282019728792003956564819968"), "minSInt256"     )  /*  -2^255      */
+            .put(new BigInteger(  "57896044618658097711785492504343953926634992332820282019728792003956564819967"), "maxSInt256"     )  /*   2^255 - 1  */
+            .put(new BigInteger(                                        "340282366920938463463374607431768211455"), "maxUInt128"     )  /*   2^128 - 1  */
+            .put(new BigInteger(                              "3402823669209384634633746074317682114550000000000"), "maxUFixed128x10")  /* ( 2^128 - 1) * 10^10 */
+            .put(new BigInteger(                              "1461501637330902918203684832716283019655932542975"), "maxUInt160"     )  /*   2^160 - 1  */
+            .put(new BigInteger( "115792089237316195423570985008687907853269984665640564039457584007913129639935"), "maxUInt256"     )  /*   2^256 - 1  */
+            .build();
 
     public static String translateConstraint(ConjunctiveFormula constraint) {
         KILtoSMTLib kil2SMT = new KILtoSMTLib(true, constraint.globalContext());
@@ -437,7 +452,7 @@ public class    KILtoSMTLib extends CopyOnWriteTransformer {
                 sb.append(left);
                 sb.append(" ");
                 sb.append(right);
-                sb.append(")");
+                sb.append(")\n");
                 isEmptyAdd = false;
             } catch (UnsupportedOperationException e) {
                 // TODO(AndreiS): fix this translation and the exceptions
@@ -580,12 +595,8 @@ public class    KILtoSMTLib extends CopyOnWriteTransformer {
 
     @Override
     public JavaSymbolicObject transform(IntToken intToken) {
-        BigInteger v = intToken.bigIntegerValue();
-        BigInteger pow256 = new BigInteger("115792089237316195423570985008687907853269984665640564039457584007913129639936");
-        if (v.equals(pow256)) {
-            return new SMTLibTerm("pow256");
-        }
-        return new SMTLibTerm(intToken.javaBackendValue());
+        String v = bigNumbers.getOrDefault(intToken.bigIntegerValue(), intToken.javaBackendValue());
+        return new SMTLibTerm(v);
     }
 
     @Override

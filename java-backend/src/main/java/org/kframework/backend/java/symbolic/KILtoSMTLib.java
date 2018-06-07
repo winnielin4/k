@@ -118,6 +118,8 @@ public class    KILtoSMTLib extends CopyOnWriteTransformer {
             "bv2int",
             /* bit vector extras */
             "mint_signed_of_unsigned",
+            /* big numbers */
+            "pow256",
             /* string theory */
             "string_lt",
             "string_le",
@@ -578,6 +580,11 @@ public class    KILtoSMTLib extends CopyOnWriteTransformer {
 
     @Override
     public JavaSymbolicObject transform(IntToken intToken) {
+        BigInteger v = intToken.bigIntegerValue();
+        BigInteger pow256 = new BigInteger("115792089237316195423570985008687907853269984665640564039457584007913129639936");
+        if (v.equals(pow256)) {
+            return new SMTLibTerm("pow256");
+        }
         return new SMTLibTerm(intToken.javaBackendValue());
     }
 

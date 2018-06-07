@@ -43,7 +43,11 @@ public class Z3Wrapper {
         this.globalOptions = globalOptions;
         this.files = files;
 
-        String defaultPrelude = "(set-option :auto-config false)\n(set-option :smt.mbqi false)\n";
+        String defaultPrelude = "(set-option :auto-config false)\n(set-option :smt.mbqi false)\n"
+                + "(declare-fun pow256 () Int)\n"
+                + " (assert (>= pow256 115792089237316195423570985008687907853269984665640564039457584007913129639936))\n"
+                + " (assert (<= pow256 115792089237316195423570985008687907853269984665640564039457584007913129639936))\n"
+                ;
 
         SMT_PRELUDE = options.smtPrelude == null ? defaultPrelude : files.loadFromWorkingDirectory(options.smtPrelude);
     }

@@ -613,32 +613,44 @@ public class SymbolicRewriter {
             throw e;
         }
         int branchingRemaining = KProve.options.global.branchingAllowed;
+        boolean nextStepLogEnabled = false;
         while (!queue.isEmpty()) {
             step++;
+            int v = 0;
+            boolean oldLogEnabled = KProve.options.global.log;
+            if (nextStepLogEnabled) {
+                KProve.options.global.log = true;
+            }
+            nextStepLogEnabled = false;
+
             for (ConstrainedTerm term : queue) {
+                v++;
                 Term generatedTop = term.term();
                 Term k = ((KList) ((KItem) generatedTop).kList()).get(0);
                 BuiltinList kSequence = ((BuiltinList) ((KList) ((KItem) k).klist()).get(0));
                 boolean isHalt = kSequence.size() == 2 && kSequence.get(0) instanceof KItem
                         && kSequence.get(0).toString().equals("#halt_EVM(.KList)");
                 boolean oldDebug =  KProve.options.global.debug;
+                boolean oldLog = KProve.options.global.log;
 
-                if (isHalt && !KProve.options.global.noDebugLastStep) {
+                if (isHalt && !KProve.options.global.noDebugLastStep
+                        || KProve.options.global.debugSteps.contains(String.valueOf(step))) {
                     KProve.options.global.debug = true;
+                    KProve.options.global.log = true;
                 }
                 if (term.implies(targetTerm)) {
                     successPaths++;
                     System.out.println("\n============\nStep " + step + ": eliminated!\n============\n");
-                    logStep(step, targetCallDataStr, term, true);
+                    logStep(step, v, targetCallDataStr, term, true);
                     continue;
                 } else {
-                    logStep(step, targetCallDataStr, term, step == 1);
+                    logStep(step, v, targetCallDataStr, term, step == 1);
                 }
 
                 //stopping at halt
                 if (isHalt) {
                     if (!KProve.options.global.log) {
-                        logStep(step, targetCallDataStr, term, true);
+                        logStep(step, v, targetCallDataStr, term, true);
                     }
                     System.out.println("Halt! Terminating branch.");
                     proofResults.add(term);
@@ -669,12 +681,21 @@ public class SymbolicRewriter {
                 if (guarded) {
                     ConstrainedTerm result = applySpecRules(term, specRules);
                     if (result != null) {
+                        nextStepLogEnabled = true;
+                        if (!KProve.options.global.log) {
+                            logStep(step, v, targetCallDataStr, term, true);
+                        }
+                        // re-running constraint generation again for debug purposes
+                        if (!KProve.options.global.debug) {
+                            System.err.println("\nApplying specification rule:\n=========================\n");
+                            boolean oldDebug2 = KProve.options.global.debug;
+                            KProve.options.global.debug = true;
+                            applySpecRules(term, specRules);
+                            KProve.options.global.debug = oldDebug2;
+                        }
                         if (visited.add(result)) {
                             nextQueue.add(result);
                         } else {
-                            if (!KProve.options.global.log) {
-                                logStep(step, targetCallDataStr, term, true);
-                            }
                             if (term.equals(result)) {
                                 kem.registerCriticalWarning("Step " + step + ": infinite loop after applying a spec rule.");
                             }
@@ -688,7 +709,7 @@ public class SymbolicRewriter {
                     results = fastComputeRewriteStep(term, false, true, true, step);
                 } catch (Throwable e) {
                     if (!KProve.options.global.log) {
-                        logStep(step, targetCallDataStr, term, true);
+                        logStep(step, v, targetCallDataStr, term, true);
                     }
                     System.out.println("\n\nTerm throwing exception\n============================\n\n");
                     KProve.prettyPrint(term.term());
@@ -699,7 +720,7 @@ public class SymbolicRewriter {
                 }
                 if (results.isEmpty()) {
                     if (!KProve.options.global.log) {
-                        logStep(step, targetCallDataStr, term, true);
+                        logStep(step, v, targetCallDataStr, term, true);
                     }
                     System.out.println("\nStep above: " + step + ", evaluation ended with no successors.");
                     /* final term */
@@ -726,8 +747,9 @@ public class SymbolicRewriter {
                 }
 
                 if (results.size() > 1) {
+                    nextStepLogEnabled = true;
                     if (!KProve.options.global.log) {
-                        logStep(step, targetCallDataStr, term, true);
+                        logStep(step, v, targetCallDataStr, term, true);
                     }
                     if (branchingRemaining == 0) {
                         System.out.println("\nHalt on branching!\n=====================\n");
@@ -752,6 +774,7 @@ public class SymbolicRewriter {
                     }
                 }
                 KProve.options.global.debug = oldDebug;
+                KProve.options.global.log = oldLog;
             }
 
             /* swap the queues */
@@ -761,6 +784,8 @@ public class SymbolicRewriter {
             nextQueue = temp;
             nextQueue.clear();
             guarded = true;
+
+            KProve.options.global.log = oldLogEnabled;
         }
 
         if (global.globalOptions.verbose) {
@@ -793,7 +818,7 @@ public class SymbolicRewriter {
         global.profiler.printResult();
     }
 
-    private BuiltinList logStep(int step, String targetCallDataStr, ConstrainedTerm term, boolean forced) {
+    private BuiltinList logStep(int step, int v, String targetCallDataStr, ConstrainedTerm term, boolean forced) {
         Term generatedTop = term.term();
         Term k = ((KList) ((KItem) generatedTop).kList()).get(0);
         Term ethereum = ((KList) ((KItem) generatedTop).kList()).get(5);
@@ -819,8 +844,8 @@ public class SymbolicRewriter {
         }
 
         if (KProve.options.global.log || forced) {
-            System.out.println("\nSTEP " + step + ": " + (System.currentTimeMillis() - Main.startTime) / 1000. +
-                    " s \n===================");
+            System.out.println("\nSTEP " + step + " v" + v + " : "
+                    + (System.currentTimeMillis() - Main.startTime) / 1000. + " s \n===================");
         }
 
         if (KProve.options.global.log || forced) {
@@ -830,11 +855,12 @@ public class SymbolicRewriter {
             System.out.println("<localMem>");
 
             if (theMap instanceof BuiltinMap) {
-                List<Term> entries = ((BuiltinMap) theMap).getKComponents();
+                /*List<Term> entries = ((BuiltinMap) theMap).getKComponents();
                 for (int i = 0; i < entries.size(); i += 10) {
                     System.out.println("\t" + entries.get(i));
                     System.out.println("\t...");
-                }
+                }*/
+                System.out.println("...");
             } else {
                 System.out.println("\tNon-map format:");
                 System.out.print("\t");
@@ -860,7 +886,7 @@ public class SymbolicRewriter {
             KProve.prettyPrint(term.constraint());
         }
         if (!(theMap instanceof BuiltinMap || theMap instanceof Variable)) {
-            throw new RuntimeException("Non-map format, aborting.");
+            throw new RuntimeException("<localMem> non-map format, aborting.");
         }
         return kSequence;
     }

@@ -22,6 +22,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
+import org.kframework.kprove.KProve;
 
 
 /**
@@ -183,12 +184,12 @@ public class ConstrainedTerm extends JavaSymbolicObject {
         ConjunctiveFormula rightHandSide = constraint.removeBindings(rightOnlyVariables);
         rightHandSide = (ConjunctiveFormula) rightHandSide.substituteAndEvaluate(leftHandSide.substitution(), context);
 
-        if (finalImplication) {
+        if (KProve.options.global.logBasic && finalImplication) {
             System.err.println("\nStart: proving final implication:\n================= \n\t"
                     + leftHandSide + "\n  implies \n\t" + rightHandSide);
         }
         boolean implicationResult = leftHandSide.implies(rightHandSide, rightOnlyVariables);
-        if (finalImplication) {
+        if (KProve.options.global.logBasic && finalImplication) {
             System.err.println("\nEnd: proving final implication\n================= \n");
         }
         if (!implicationResult) {

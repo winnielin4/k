@@ -123,5 +123,10 @@ public final class GlobalOptions {
                     " All custom logging only works for KEVM-based specs.")
     public boolean logBasic = false;
 
+    @Parameter(names="--optimize-z3-axioms",
+            description="Eliminate from z3 queries the axioms, when LHS doesn't contain 'chop' or 'sizeWordStackAux'. " +
+                    "Only for kevm.")
+    public boolean optimizeZ3Axioms = false;
+
     public boolean logRulesPublic = false;
 }

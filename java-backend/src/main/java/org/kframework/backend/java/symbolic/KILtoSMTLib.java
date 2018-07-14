@@ -34,6 +34,7 @@ import org.kframework.krun.KRunOptions;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Formatter;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -169,13 +170,20 @@ public class    KILtoSMTLib extends CopyOnWriteTransformer {
             /* bool2int */
             "smt_bool2int");
 
-    public static String translateConstraint(ConjunctiveFormula constraint) {
+    public static CharSequence translateConstraint(ConjunctiveFormula constraint) {
         KILtoSMTLib kil2SMT = new KILtoSMTLib(true, constraint.globalContext());
-        String expression = kil2SMT.translate(constraint).expression();
-        return kil2SMT.getSortAndFunctionDeclarations(kil2SMT.variables())
-                + kil2SMT.getAxioms()
-                + kil2SMT.getConstantDeclarations(kil2SMT.variables())
-                + "(assert " + expression + ")";
+
+        //this line has side effects used later
+        CharSequence expression = kil2SMT.translate(constraint).expression();
+
+        StringBuilder sb = new StringBuilder(1024);
+        kil2SMT.appendSortAndFunctionDeclarations(sb, kil2SMT.variables());
+        kil2SMT.appendAxioms(sb);
+        kil2SMT.appendConstantDeclarations(sb, kil2SMT.variables());
+        sb.append("(assert ")
+                .append(expression)
+                .append(")");
+        return sb;
     }
 
     /**
@@ -183,23 +191,24 @@ public class    KILtoSMTLib extends CopyOnWriteTransformer {
      * left -> right <==> !(left /\ !right)
      * => this query should be unsat for implication to be proven.
      */
-    public static String translateImplication(
+    public static CharSequence translateImplication(
             ConjunctiveFormula leftHandSide,
             ConjunctiveFormula rightHandSide,
             Set<Variable> rightHandSideOnlyVariables) {
         KILtoSMTLib leftTransformer = new KILtoSMTLib(true, leftHandSide.globalContext());
         KILtoSMTLib rightTransformer = new KILtoSMTLib(false, rightHandSide.globalContext());
-        String leftExpression = leftTransformer.translate(leftHandSide).expression();
-        String rightExpression = rightTransformer.translate(rightHandSide).expression();
-        StringBuilder sb = new StringBuilder();
-        sb.append(leftTransformer.getSortAndFunctionDeclarations(
-                Sets.union(leftTransformer.variables(), rightTransformer.variables())));
+        CharSequence leftExpression = leftTransformer.translate(leftHandSide).expression();
+        String rightExpression = rightTransformer.translate(rightHandSide).expression().toString();
+        StringBuilder sb = new StringBuilder(1024);
+        leftTransformer.appendSortAndFunctionDeclarations(
+                sb, Sets.union(leftTransformer.variables(), rightTransformer.variables()));
         if (!KProve.options.global.optimizeZ3Axioms
                 || rightExpression.contains("chop") || rightExpression.contains("sizeWordStackAux"))
-            sb.append(leftTransformer.getAxioms());
-        sb.append(leftTransformer.getConstantDeclarations(Sets.difference(
-                Sets.union(leftTransformer.variables(), rightTransformer.variables()),
-                rightHandSideOnlyVariables)));
+            leftTransformer.appendAxioms(sb);
+        leftTransformer.appendConstantDeclarations(sb,
+                Sets.difference(
+                        Sets.union(leftTransformer.variables(), rightTransformer.variables()),
+                        rightHandSideOnlyVariables));
         sb.append("(assert (and ");
         sb.append(leftExpression);
         sb.append(" (not ");
@@ -208,7 +217,7 @@ public class    KILtoSMTLib extends CopyOnWriteTransformer {
                 rightHandSideOnlyVariables);
         if (!rightHandSideOnlyVariables.isEmpty()) {
             sb.append("(exists (");
-            sb.append(leftTransformer.getQuantifiedVariables(rightHandSideOnlyVariables));
+            leftTransformer.appendQuantifiedVariables(sb, rightHandSideOnlyVariables);
             sb.append(") ");
         }
         sb.append(rightExpression);
@@ -216,7 +225,7 @@ public class    KILtoSMTLib extends CopyOnWriteTransformer {
             sb.append(")");
         }
         sb.append(")))");
-        return sb.toString();
+        return sb;
     }
 
     private final Definition definition;
@@ -252,7 +261,7 @@ public class    KILtoSMTLib extends CopyOnWriteTransformer {
         }
     }
 
-    private String getSortAndFunctionDeclarations(Set<Variable> variables) {
+    private StringBuilder appendSortAndFunctionDeclarations(StringBuilder sb, Set<Variable> variables) {
         Set<Sort> sorts = new HashSet<>();
         List<KLabelConstant> functions = new ArrayList<>();
         for (KLabelConstant kLabel : definition.kLabels()) {
@@ -270,8 +279,6 @@ public class    KILtoSMTLib extends CopyOnWriteTransformer {
         for (Variable variable : variables) {
             sorts.add(renameSort(variable.sort()));
         }
-
-        StringBuilder sb = new StringBuilder();
 
         for (Sort sort : Sets.difference(sorts, SMTLIB_BUILTIN_SORTS)) {
             if (sort.equals(Sort.MAP) && krunOptions.experimental.smt.mapAsIntArray) {
@@ -297,21 +304,20 @@ public class    KILtoSMTLib extends CopyOnWriteTransformer {
             sb.append(")\n");
         }
 
-        return sb.toString();
+        return sb;
     }
 
-    private String getAxioms() {
-        StringBuilder sb = new StringBuilder();
+    private CharSequence appendAxioms(StringBuilder sb) {
         for (Rule rule : definition.functionRules().values()) {
             if (rule.att().contains(Attribute.SMT_LEMMA_KEY)) {
                 try {
                     KILtoSMTLib kil2SMT = new KILtoSMTLib(false, definition, krunOptions);
-                    String leftExpression = kil2SMT.translate(rule.leftHandSide()).expression();
-                    String rightExpression = kil2SMT.translate(rule.rightHandSide()).expression();
+                    CharSequence leftExpression = kil2SMT.translate(rule.leftHandSide()).expression();
+                    CharSequence rightExpression = kil2SMT.translate(rule.rightHandSide()).expression();
                     sb.append("(assert ");
                     if (!kil2SMT.variables().isEmpty()) {
                         sb.append("(forall (");
-                        sb.append(kil2SMT.getQuantifiedVariables(kil2SMT.variables()));
+                        kil2SMT.appendQuantifiedVariables(sb, kil2SMT.variables());
                         sb.append(") ");
                         //sb.append(") (! ");
                     }
@@ -330,11 +336,10 @@ public class    KILtoSMTLib extends CopyOnWriteTransformer {
                 } catch (UnsupportedOperationException e) { }
             }
         }
-        return sb.toString();
+        return sb;
     }
 
-    private String getConstantDeclarations(Set<Variable> variables) {
-        StringBuilder sb = new StringBuilder();
+    private CharSequence appendConstantDeclarations(StringBuilder sb, Set<Variable> variables) {
         for (Variable variable : variables) {
             sb.append("(declare-fun ");
             sb.append("|").append(variable.name()).append("|");
@@ -344,11 +349,10 @@ public class    KILtoSMTLib extends CopyOnWriteTransformer {
             sb.append(sortName);
             sb.append(")\n");
         }
-        return sb.toString();
+        return sb;
     }
 
-    private String getQuantifiedVariables(Set<Variable> variables) {
-        StringBuilder sb = new StringBuilder();
+    private CharSequence appendQuantifiedVariables(StringBuilder sb, Set<Variable> variables) {
         for (Variable variable : variables) {
             sb.append("(");
             sb.append("|").append(variable.name()).append("|");
@@ -358,7 +362,7 @@ public class    KILtoSMTLib extends CopyOnWriteTransformer {
             sb.append(sortName);
             sb.append(")");
         }
-        return sb.toString();
+        return sb;
     }
 
     private String getSortName(Variable variable) {
@@ -410,7 +414,7 @@ public class    KILtoSMTLib extends CopyOnWriteTransformer {
         }
 
         if (equalities.isEmpty()) {
-            return new SMTLibTerm("true");
+            return new SMTLibTerm(Boolean.TRUE.toString());
         }
 
         StringBuilder sb = new StringBuilder();
@@ -418,8 +422,8 @@ public class    KILtoSMTLib extends CopyOnWriteTransformer {
         boolean isEmptyAdd = true;
         for (Equality equality : equalities) {
             try {
-                String left = translateTerm(equality.leftHandSide());
-                String right = translateTerm(equality.rightHandSide());
+                CharSequence left = translateTerm(equality.leftHandSide());
+                CharSequence right = translateTerm(equality.rightHandSide());
                 sb.append(" (= ");
                 sb.append(left);
                 sb.append(" ");
@@ -440,10 +444,10 @@ public class    KILtoSMTLib extends CopyOnWriteTransformer {
             sb.append(" true");
         }
         sb.append(")");
-        return new SMTLibTerm(sb.toString());
+        return new SMTLibTerm(sb);
     }
 
-    public String translateTerm(Term term) {
+    public CharSequence translateTerm(Term term) {
         try {
             return translate(term).expression();
         } catch (SMTTranslationFailure | UnsupportedOperationException e) {
@@ -523,7 +527,8 @@ public class    KILtoSMTLib extends CopyOnWriteTransformer {
             // smtlib expression instead of operator
             String expression = label;
             for (int i = 0; i < kList.getContents().size(); i++) {
-                expression = expression.replaceAll("#" + (i + 1) + "(?![0-9])", translate(kList.get(i)).expression());
+                expression = expression.replaceAll("#" + (i + 1) + "(?![0-9])",
+                        translate(kList.get(i)).expression().toString());
             }
             return new SMTLibTerm(expression);
         }
@@ -554,7 +559,7 @@ public class    KILtoSMTLib extends CopyOnWriteTransformer {
                 sb.append(translate(argument).expression());
             }
             sb.append(")");
-            return new SMTLibTerm(sb.toString());
+            return new SMTLibTerm(sb);
         } else {
             return new SMTLibTerm(label);
         }
@@ -578,10 +583,13 @@ public class    KILtoSMTLib extends CopyOnWriteTransformer {
         }
         assert !krunOptions.experimental.smt.floatsAsPO;
 
-        return new SMTLibTerm(String.format(
+        StringBuilder sb = new StringBuilder();
+        new Formatter(sb).format(
                 "((_ asFloat %d %d) roundNearestTiesToEven %s 0)",
                 floatToken.exponent(), floatToken.bigFloatValue().precision(),
-                floatToken.bigFloatValue().toString("%f")));
+                floatToken.bigFloatValue().toString("%f"));
+
+        return new SMTLibTerm(sb);
     }
 
     @Override
@@ -592,7 +600,7 @@ public class    KILtoSMTLib extends CopyOnWriteTransformer {
             BigInteger value = bitVector.unsignedValue();
             sb.append(value.testBit(i) ? "1" : "0");
         }
-        return new SMTLibTerm(sb.toString());
+        return new SMTLibTerm(sb);
     }
 
     @Override

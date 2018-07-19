@@ -127,6 +127,15 @@ public class ConstrainedTerm extends JavaSymbolicObject {
      * existentially quantified.
      */
     public ConjunctiveFormula matchImplies(ConstrainedTerm constrainedTerm, boolean expand) {
+
+        System.out.println("matchImplies");
+        System.out.println(">>>>>>>>");
+        System.out.println(this);
+        System.out.println("--------");
+        System.out.println(constrainedTerm);
+        System.out.println("<<<<<<<<");
+        System.out.println();
+
         ConjunctiveFormula constraint = ConjunctiveFormula.of(constrainedTerm.termContext().global())
                 .add(data.constraint.substitution())
                 .add(data.term, constrainedTerm.data.term)
@@ -203,6 +212,17 @@ public class ConstrainedTerm extends JavaSymbolicObject {
             ConjunctiveFormula patternConstraint,
             Set<Variable> variables,
             TermContext context) {
+
+        System.out.println("evaluateConstraints");
+        System.out.println(">>>>>>>>");
+        System.out.println(constraint);
+        System.out.println("--------");
+        System.out.println(subjectConstraint);
+        System.out.println("--------");
+        System.out.println(patternConstraint);
+        System.out.println("<<<<<<<<");
+        System.out.println();
+
         context.setTopConstraint(subjectConstraint);
         List<ConjunctiveFormula> candidates = constraint.getDisjunctiveNormalForm().conjunctions().stream()
                 .map(c -> c.addAndSimplify(patternConstraint, context))

@@ -85,6 +85,14 @@ public class FastRuleMatcher {
             boolean proveFlag,
             TermContext context) {
 
+        System.out.println("matchRulePattern");
+        System.out.println(">>>>>>>>");
+        System.out.println(subject.term());
+        System.out.println("--------");
+        System.out.println(pattern);
+        System.out.println("<<<<<<<<");
+        System.out.println();
+
         ruleMask.stream().forEach(i -> constraints[i] = ConjunctiveFormula.of(context.global()));
         empty = BitSet.apply(ruleCount);
 

@@ -5,6 +5,7 @@ import java.math.BigInteger;
 
 import org.apache.commons.lang3.StringUtils;
 import org.kframework.backend.java.kil.Sort;
+import org.kframework.backend.java.kil.Term;
 import org.kframework.backend.java.kil.TermContext;
 import org.kframework.backend.java.kil.Token;
 import org.kframework.compile.FloatBuiltin;
@@ -18,46 +19,63 @@ import org.kframework.utils.StringUtil;
 
 public class BuiltinStringOperations {
 
-    public static StringToken add(StringToken term1, StringToken term2, TermContext context) {
+    public static Term add(Term[] terms, TermContext context) {
+        StringToken term1 = (StringToken) terms[0];
+        StringToken term2 = (StringToken) terms[1];
         return StringToken.of(term1.stringValue() + term2.stringValue());
     }
 
-    public static BoolToken eq(StringToken term1, StringToken term2, TermContext context) {
+    public static Term eq(Term[] terms, TermContext context) {
+        StringToken term1 = (StringToken) terms[0];
+        StringToken term2 = (StringToken) terms[1];
         return BoolToken.of(term1.stringValue().compareTo(term2.stringValue()) == 0);
     }
 
-    public static BoolToken ne(StringToken term1, StringToken term2, TermContext context) {
+    public static Term ne(Term[] terms, TermContext context) {
+        StringToken term1 = (StringToken) terms[0];
+        StringToken term2 = (StringToken) terms[1];
         return BoolToken.of(term1.stringValue().compareTo(term2.stringValue()) != 0);
     }
 
-    public static BoolToken gt(StringToken term1, StringToken term2, TermContext context) {
+    public static Term gt(Term[] terms, TermContext context) {
+        StringToken term1 = (StringToken) terms[0];
+        StringToken term2 = (StringToken) terms[1];
         return BoolToken.of(term1.stringValue().compareTo(term2.stringValue()) > 0);
     }
 
-    public static BoolToken ge(StringToken term1, StringToken term2, TermContext context) {
+    public static Term ge(Term[] terms, TermContext context) {
+        StringToken term1 = (StringToken) terms[0];
+        StringToken term2 = (StringToken) terms[1];
         return BoolToken.of(term1.stringValue().compareTo(term2.stringValue()) >= 0);
     }
 
-    public static BoolToken lt(StringToken term1, StringToken term2, TermContext context) {
+    public static Term lt(Term[] terms, TermContext context) {
+        StringToken term1 = (StringToken) terms[0];
+        StringToken term2 = (StringToken) terms[1];
         return BoolToken.of(term1.stringValue().compareTo(term2.stringValue()) < 0);
     }
 
-    public static BoolToken le(StringToken term1, StringToken term2, TermContext context) {
+    public static Term le(Term[] terms, TermContext context) {
+        StringToken term1 = (StringToken) terms[0];
+        StringToken term2 = (StringToken) terms[1];
         return BoolToken.of(term1.stringValue().compareTo(term2.stringValue()) <= 0);
     }
 
-    public static IntToken len(StringToken term, TermContext context) {
+    public static Term len(Term[] terms, TermContext context) {
+        StringToken term = (StringToken) terms[0];
         return IntToken.of(term.stringValue().codePointCount(0, term.stringValue().length()));
     }
 
-    public static IntToken ord(StringToken term, TermContext context) {
+    public static Term ord(Term[] terms, TermContext context) {
+        StringToken term = (StringToken) terms[0];
         if (term.stringValue().codePointCount(0, term.stringValue().length()) != 1) {
             return null;
         }
         return IntToken.of(term.stringValue().codePointAt(0));
     }
 
-    public static StringToken chr(IntToken term, TermContext context) {
+    public static Term chr(Term[] terms, TermContext context) {
+        IntToken term = (IntToken) terms[0];
         //safe because we know it's in the unicode code range or it will throw
         int codePoint = term.intValue();
         try {
@@ -69,7 +87,10 @@ public class BuiltinStringOperations {
         }
     }
 
-    public static StringToken substr(StringToken term, IntToken start, IntToken end, TermContext context) {
+    public static Term substr(Term[] terms, TermContext context) {
+        StringToken term = (StringToken) terms[0];
+        IntToken start = (IntToken) terms[1];
+        IntToken end = (IntToken) terms[2];
         int beginOffset = term.stringValue().offsetByCodePoints(0, start.intValue());
         int endOffset = term.stringValue().offsetByCodePoints(0, end.intValue());
         try {
@@ -79,31 +100,44 @@ public class BuiltinStringOperations {
         }
     }
 
-    public static IntToken find(StringToken term1, StringToken term2, IntToken idx, TermContext context) {
+    public static Term find(Term[] terms, TermContext context) {
+        StringToken term1 = (StringToken) terms[0];
+        StringToken term2 = (StringToken) terms[1];
+        IntToken idx = (IntToken) terms[2];
         int offset = term1.stringValue().offsetByCodePoints(0, idx.intValue());
         int foundOffset = term1.stringValue().indexOf(term2.stringValue(), offset);
         return IntToken.of((foundOffset == -1 ? -1 : term1.stringValue().codePointCount(0, foundOffset)));
     }
 
-    public static IntToken rfind(StringToken term1, StringToken term2, IntToken idx, TermContext context) {
+    public static Term rfind(Term[] terms, TermContext context) {
+        StringToken term1 = (StringToken) terms[0];
+        StringToken term2 = (StringToken) terms[1];
+        IntToken idx = (IntToken) terms[2];
         int offset = term1.stringValue().offsetByCodePoints(0, idx.intValue());
         int foundOffset = term1.stringValue().lastIndexOf(term2.stringValue(), offset);
         return IntToken.of((foundOffset == -1 ? -1 : term1.stringValue().codePointCount(0, foundOffset)));
     }
 
-    public static IntToken findChar(StringToken term1, StringToken term2, IntToken idx, TermContext context) {
+    public static Term findChar(Term[] terms, TermContext context) {
+        StringToken term1 = (StringToken) terms[0];
+        StringToken term2 = (StringToken) terms[1];
+        IntToken idx = (IntToken) terms[2];
         int offset = term1.stringValue().offsetByCodePoints(0, idx.intValue());
         int foundOffset = StringUtil.indexOfAny(term1.stringValue(), term2.stringValue(), offset);
         return IntToken.of((foundOffset == -1 ? -1 : term1.stringValue().codePointCount(0, foundOffset)));
     }
 
-    public static IntToken rfindChar(StringToken term1, StringToken term2, IntToken idx, TermContext context) {
+    public static Term rfindChar(Term[] terms, TermContext context) {
+        StringToken term1 = (StringToken) terms[0];
+        StringToken term2 = (StringToken) terms[1];
+        IntToken idx = (IntToken) terms[2];
         int offset = term1.stringValue().offsetByCodePoints(0, idx.intValue());
         int foundOffset = StringUtil.lastIndexOfAny(term1.stringValue(), term2.stringValue(), offset);
         return IntToken.of((foundOffset == -1 ? -1 : term1.stringValue().codePointCount(0, foundOffset)));
     }
 
-    public static IntToken string2int(StringToken term, TermContext context) {
+    public static Term string2int(Term[] terms, TermContext context) {
+        StringToken term = (StringToken) terms[0];
         try {
             return IntToken.of(term.stringValue());
         } catch (NumberFormatException e) {
@@ -111,15 +145,20 @@ public class BuiltinStringOperations {
         }
     }
 
-    public static IntToken string2base(StringToken term, IntToken base, TermContext context) {
+    public static Term string2base(Term[] terms, TermContext context) {
+        StringToken term = (StringToken) terms[0];
+        IntToken base = (IntToken) terms[1];
         return IntToken.of(new BigInteger(term.stringValue(), base.intValue()));
     }
 
-    public static StringToken base2string(IntToken integer, IntToken base, TermContext context) {
+    public static Term base2string(Term[] terms, TermContext context) {
+        IntToken integer = (IntToken) terms[0];
+        IntToken base = (IntToken) terms[1];
         return StringToken.of(integer.bigIntegerValue().toString(base.intValue()));
     }
 
-    public static FloatToken string2float(StringToken term, TermContext context) {
+    public static Term string2float(Term[] terms, TermContext context) {
+        StringToken term = (StringToken) terms[0];
         try {
             return FloatToken.of(term.stringValue());
         } catch (NumberFormatException e) {
@@ -127,20 +166,24 @@ public class BuiltinStringOperations {
         }
     }
 
-    public static StringToken float2string(FloatToken term, TermContext context) {
+    public static Term float2string(Term[] terms, TermContext context) {
+        FloatToken term = (FloatToken) terms[0];
         return StringToken.of(FloatBuiltin.printKFloat(term.bigFloatValue(), term.bigFloatValue()::toString));
     }
 
-    public static StringToken floatFormat(FloatToken term, StringToken format, TermContext context) {
+    public static Term floatFormat(Term[] terms, TermContext context) {
+        FloatToken term = (FloatToken) terms[0];
+        StringToken format = (StringToken) terms[1];
         return StringToken.of(FloatBuiltin.printKFloat(term.bigFloatValue(), () -> term.bigFloatValue().toString(format.stringValue())));
     }
 
-    public static StringToken int2string(IntToken term, TermContext context) {
+    public static Term int2string(Term[] terms, TermContext context) {
+        IntToken term = (IntToken) terms[0];
         return StringToken.of(term.bigIntegerValue().toString());
     }
 /*
     // when we support java 7
-    public static StringToken name(StringToken term) {
+    public static Term name(StringToken term) {
         if (term.stringValue().codePointCount(0, term.stringValue().length()) != 1) {
             throw new IllegalArgumentException();
         }
@@ -151,7 +194,8 @@ public class BuiltinStringOperations {
         return StringToken.of(name);
     }
 */
-    public static StringToken category(StringToken term, TermContext context) {
+    public static Term category(Term[] terms, TermContext context) {
+        StringToken term = (StringToken) terms[0];
         if (term.stringValue().codePointCount(0, term.stringValue().length()) != 1) {
             throw new IllegalArgumentException();
         }
@@ -160,7 +204,8 @@ public class BuiltinStringOperations {
         return StringToken.of(StringUtil.getCategoryCode((byte)cat));
     }
 
-    public static StringToken directionality(StringToken term, TermContext context) {
+    public static Term directionality(Term[] terms, TermContext context) {
+        StringToken term = (StringToken) terms[0];
         if (term.stringValue().codePointCount(0, term.stringValue().length()) != 1) {
             throw new IllegalArgumentException();
         }
@@ -168,11 +213,14 @@ public class BuiltinStringOperations {
         return StringToken.of(StringUtil.getDirectionalityCode(cat));
     }
 
-    public static StringToken token2string(UninterpretedToken token, TermContext context) {
+    public static Term token2string(Term[] terms, TermContext context) {
+        UninterpretedToken token = (UninterpretedToken) terms[0];
         return StringToken.of(token.javaBackendValue());
     }
 
-    public static Token string2token(StringToken sort, StringToken value, TermContext context) {
+    public static Term string2token(Term[] terms, TermContext context) {
+        StringToken sort = (StringToken) terms[0];
+        StringToken value = (StringToken) terms[1];
         return Token.of(Sort.parse(sort.stringValue()), value.stringValue());
     }
 
@@ -189,9 +237,10 @@ public class BuiltinStringOperations {
      *            the term context
      * @return the text with any replacements processed
      */
-    public static StringToken replaceAll(StringToken text,
-            StringToken searchString, StringToken replacement,
-            TermContext context) {
+    public static Term replaceAll(Term[] terms, TermContext context) {
+        StringToken text = (StringToken) terms[0];
+        StringToken searchString = (StringToken) terms[1];
+        StringToken replacement = (StringToken) terms[2];
         return StringToken.of(StringUtils.replace(text.stringValue(),
                 searchString.stringValue(), replacement.stringValue()));
     }
@@ -212,9 +261,11 @@ public class BuiltinStringOperations {
      *            the term context
      * @return the text with any replacements processed
      */
-    public static StringToken replace(StringToken text,
-            StringToken searchString, StringToken replacement, IntToken max,
-            TermContext context) {
+    public static Term replace(Term[] terms, TermContext context) {
+        StringToken text = (StringToken) terms[0];
+        StringToken searchString = (StringToken) terms[1];
+        StringToken replacement = (StringToken) terms[2];
+        IntToken max = (IntToken) terms[3];
         return StringToken.of(StringUtils.replace(text.stringValue(),
                 searchString.stringValue(), replacement.stringValue(),
                 max.intValue()));
@@ -233,9 +284,10 @@ public class BuiltinStringOperations {
      *            the term context
      * @return the text with any replacements processed
      */
-    public static StringToken replaceFirst(StringToken text,
-            StringToken searchString, StringToken replacement,
-            TermContext context) {
+    public static Term replaceFirst(Term[] terms, TermContext context) {
+        StringToken text = (StringToken) terms[0];
+        StringToken searchString = (StringToken) terms[1];
+        StringToken replacement = (StringToken) terms[2];
         return StringToken.of(StringUtils.replaceOnce(text.stringValue(),
                 searchString.stringValue(), replacement.stringValue()));
     }
@@ -251,8 +303,9 @@ public class BuiltinStringOperations {
      *            the term context
      * @return the number of occurrences
      */
-    public static IntToken countOccurences(StringToken text,
-            StringToken substr, TermContext context) {
+    public static Term countOccurences(Term[] terms, TermContext context) {
+        StringToken text = (StringToken) terms[0];
+        StringToken substr = (StringToken) terms[1];
         return IntToken.of(StringUtils.countMatches(text.stringValue(),
                 substr.stringValue()));
     }

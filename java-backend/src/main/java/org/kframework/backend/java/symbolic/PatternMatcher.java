@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 
 /**
@@ -63,12 +64,11 @@ public class PatternMatcher extends AbstractUnifier {
         return fSubstitution.substitution();
     }
 
-    public List<Substitution<Variable, Term>> substitutions() {
+    public Stream<Substitution<Variable, Term>> substitutions() {
         return fSubstitution.getDisjunctiveNormalForm().conjunctions().stream()
                 .map(c -> c.simplify(termContext))
                 .filter(c -> !c.isFalse())
-                .map(ConjunctiveFormula::substitution)
-                .collect(Collectors.toList());
+                .map(ConjunctiveFormula::substitution);
     }
 
     public ConjunctiveFormula rawSubstitution() {

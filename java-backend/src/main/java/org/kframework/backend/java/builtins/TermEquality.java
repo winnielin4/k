@@ -14,7 +14,9 @@ import org.kframework.backend.java.symbolic.TruthValue;
  */
 public class TermEquality {
 
-    public static BoolToken eq(Term term1, Term term2, TermContext context) {
+    public static Term eq(Term[] terms, TermContext context) {
+        Term term1 = terms[0];
+        Term term2 = terms[1];
         if (hasKLabelVariables(term1) || hasKLabelVariables(term2)) {
             return null;
         }
@@ -29,7 +31,9 @@ public class TermEquality {
         }
     }
 
-    public static BoolToken ne(Term term1, Term term2, TermContext context) {
+    public static Term ne(Term[] terms, TermContext context) {
+        Term term1 = terms[0];
+        Term term2 = terms[1];
         if (hasKLabelVariables(term1) || hasKLabelVariables(term2)) {
             return null;
         }
@@ -77,7 +81,10 @@ public class TermEquality {
      * @return the first term if the {@code BoolToken} represents true;
      *         otherwise, the second term
      */
-    public static Term ite(BoolToken boolToken, Term t, Term e, TermContext context) {
+    public static Term ite(Term[] terms, TermContext context) {
+        BoolToken boolToken = (BoolToken)terms[0];
+        Term t = terms[1];
+        Term e = terms[2];
         if (boolToken.booleanValue()) return t;
         return e;
     }

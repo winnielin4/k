@@ -21,24 +21,29 @@ import java.util.stream.Collectors;
  */
 public class BuiltinSetOperations {
 
-    public static Term constructor(Term set1, Term set2, TermContext context) {
+    public static Term constructor(Term[] terms, TermContext context) {
+        Term set1 = terms[0];
+        Term set2 = terms[1];
         if (set1.sort() != Sort.SET || set2.sort() != Sort.SET) {
             throw new IllegalArgumentException();
         }
         return BuiltinSet.concatenate(context.global(), set1, set2);
     }
 
-    public static Term unit(TermContext context) {
+    public static Term unit(Term[] terms, TermContext context) {
         return BuiltinSet.builder(context.global()).build();
     }
 
-    public static Term element(Term element, TermContext context) {
+    public static Term element(Term[] terms, TermContext context) {
+        Term element = terms[0];
         BuiltinSet.Builder builder = BuiltinSet.builder(context.global());
         builder.add(element);
         return builder.build();
     }
 
-    public static Term intersection(BuiltinSet set1, BuiltinSet set2, TermContext context) {
+    public static Term intersection(Term[] terms, TermContext context) {
+        BuiltinSet set1 = (BuiltinSet) terms[0];
+        BuiltinSet set2 = (BuiltinSet) terms[1];
         if (!set1.isGround() || !set2.isGround()) {
             return null;
         }
@@ -48,7 +53,9 @@ public class BuiltinSetOperations {
         return builder.build();
     }
 
-    public static Term difference(Term set, BuiltinSet removeBuiltinSet, TermContext context) {
+    public static Term difference(Term[] terms, TermContext context) {
+        Term set = terms[0];
+        BuiltinSet removeBuiltinSet = (BuiltinSet) terms[1];
         if (!removeBuiltinSet.isConcreteCollection()) {
             return null;
         }
@@ -76,7 +83,9 @@ public class BuiltinSetOperations {
         }
     }
 
-    public static BoolToken in(Term element, BuiltinSet set, TermContext context) {
+    public static Term in(Term[] terms, TermContext context) {
+        Term element = terms[0];
+        BuiltinSet set = (BuiltinSet) terms[1];
         if (set.contains(element)) {
             return BoolToken.TRUE;
         } else if (element.isGround() && set.isGround()) {
@@ -88,7 +97,9 @@ public class BuiltinSetOperations {
         }
     }
 
-    public static BoolToken inclusion(BuiltinSet set1, BuiltinSet set2, TermContext context) {
+    public static Term inclusion(Term[] terms, TermContext context) {
+        BuiltinSet set1 = (BuiltinSet) terms[0];
+        BuiltinSet set2 = (BuiltinSet) terms[1];
         if (!set1.isGround() || !set2.isGround()) {
             return null;
         }
@@ -96,7 +107,8 @@ public class BuiltinSetOperations {
         return BoolToken.of(set2.elements().containsAll(set1.elements()));
     }
 
-    public static Term choice(BuiltinSet set, TermContext context) {
+    public static Term choice(Term[] terms, TermContext context) {
+        BuiltinSet set = (BuiltinSet) terms[0];
         if (!set.elements().isEmpty()) {
             return set.elements().iterator().next();
         } else if (set.isEmpty()) {

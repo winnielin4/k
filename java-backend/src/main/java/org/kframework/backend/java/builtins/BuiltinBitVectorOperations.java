@@ -16,7 +16,9 @@ import java.util.stream.Collectors;
 @SuppressWarnings("unchecked")
 public final class BuiltinBitVectorOperations {
 
-    public static BitVector construct(IntToken bitwidth, IntToken value, TermContext context) {
+    public static Term construct(Term[] terms, TermContext context) {
+        IntToken bitwidth = (IntToken) terms[0];
+        IntToken value = (IntToken) terms[1];
         try {
             return BitVector.of(value.bigIntegerValue(), bitwidth.intValue());
         } catch (ArithmeticException e) {
@@ -24,7 +26,8 @@ public final class BuiltinBitVectorOperations {
         }
     }
 
-    public static IntToken bitwidth(Term term, TermContext context) {
+    public static Term bitwidth(Term[] terms, TermContext context) {
+        Term term = terms[0];
         if (term instanceof BitVector) {
             return IntToken.of(((BitVector)term).bitwidth());
         } else {
@@ -36,19 +39,24 @@ public final class BuiltinBitVectorOperations {
         }
     }
 
-    public static BoolToken zero(BitVector term, TermContext context) {
+    public static Term zero(Term[] terms, TermContext context) {
+        BitVector term = (BitVector) terms[0];
         return BoolToken.of(term.isZero());
     }
 
-    public static IntToken svalue(BitVector term, TermContext context) {
+    public static Term svalue(Term[] terms, TermContext context) {
+        BitVector term = (BitVector) terms[0];
         return IntToken.of(term.signedValue());
     }
 
-    public static IntToken uvalue(BitVector term, TermContext context) {
+    public static Term uvalue(Term[] terms, TermContext context) {
+        BitVector term = (BitVector) terms[0];
         return IntToken.of(term.unsignedValue());
     }
 
-    public static BitVector add(BitVector term1, BitVector term2, TermContext context) {
+    public static Term add(Term[] terms, TermContext context) {
+        BitVector term1 = (BitVector) terms[0];
+        BitVector term2 = (BitVector) terms[1];
         if (term1.bitwidth() == term2.bitwidth()) {
             return term1.add(term2);
         } else {
@@ -56,7 +64,9 @@ public final class BuiltinBitVectorOperations {
         }
     }
 
-    public static BitVector sub(BitVector term1, BitVector term2, TermContext context) {
+    public static Term sub(Term[] terms, TermContext context) {
+        BitVector term1 = (BitVector) terms[0];
+        BitVector term2 = (BitVector) terms[1];
         if (term1.bitwidth() == term2.bitwidth()) {
             return term1.sub(term2);
         } else {
@@ -64,7 +74,9 @@ public final class BuiltinBitVectorOperations {
         }
     }
 
-    public static BitVector mul(BitVector term1, BitVector term2, TermContext context) {
+    public static Term mul(Term[] terms, TermContext context) {
+        BitVector term1 = (BitVector) terms[0];
+        BitVector term2 = (BitVector) terms[1];
         if (term1.bitwidth() == term2.bitwidth()) {
             return term1.mul(term2);
         } else {
@@ -72,7 +84,9 @@ public final class BuiltinBitVectorOperations {
         }
     }
 
-    public static BuiltinList sadd(BitVector term1, BitVector term2, TermContext context) {
+    public static Term sadd(Term[] terms, TermContext context) {
+        BitVector term1 = (BitVector) terms[0];
+        BitVector term2 = (BitVector) terms[1];
         if (term1.bitwidth() == term2.bitwidth()) {
             return term1.sadd(term2, context);
         } else {
@@ -80,7 +94,9 @@ public final class BuiltinBitVectorOperations {
         }
     }
 
-    public static BuiltinList uadd(BitVector term1, BitVector term2, TermContext context) {
+    public static Term uadd(Term[] terms, TermContext context) {
+        BitVector term1 = (BitVector) terms[0];
+        BitVector term2 = (BitVector) terms[1];
         if (term1.bitwidth() == term2.bitwidth()) {
             return term1.uadd(term2, context);
         } else {
@@ -88,7 +104,9 @@ public final class BuiltinBitVectorOperations {
         }
     }
 
-    public static BuiltinList ssub(BitVector term1, BitVector term2, TermContext context) {
+    public static Term ssub(Term[] terms, TermContext context) {
+        BitVector term1 = (BitVector) terms[0];
+        BitVector term2 = (BitVector) terms[1];
         if (term1.bitwidth() == term2.bitwidth()) {
             return term1.ssub(term2, context);
         } else {
@@ -96,7 +114,9 @@ public final class BuiltinBitVectorOperations {
         }
     }
 
-    public static BuiltinList usub(BitVector term1, BitVector term2, TermContext context) {
+    public static Term usub(Term[] terms, TermContext context) {
+        BitVector term1 = (BitVector) terms[0];
+        BitVector term2 = (BitVector) terms[1];
         if (term1.bitwidth() == term2.bitwidth()) {
             return term1.usub(term2, context);
         } else {
@@ -104,7 +124,9 @@ public final class BuiltinBitVectorOperations {
         }
     }
 
-    public static BuiltinList smul(BitVector term1, BitVector term2, TermContext context) {
+    public static Term smul(Term[] terms, TermContext context) {
+        BitVector term1 = (BitVector) terms[0];
+        BitVector term2 = (BitVector) terms[1];
         if (term1.bitwidth() == term2.bitwidth()) {
             return term1.smul(term2, context);
         } else {
@@ -112,7 +134,9 @@ public final class BuiltinBitVectorOperations {
         }
     }
 
-    public static BuiltinList umul(BitVector term1, BitVector term2, TermContext context) {
+    public static Term umul(Term[] terms, TermContext context) {
+        BitVector term1 = (BitVector) terms[0];
+        BitVector term2 = (BitVector) terms[1];
         if (term1.bitwidth() == term2.bitwidth()) {
             return term1.umul(term2, context);
         } else {
@@ -120,7 +144,9 @@ public final class BuiltinBitVectorOperations {
         }
     }
 
-    public static Term sdiv(BitVector term1, BitVector term2, TermContext context) {
+    public static Term sdiv(Term[] terms, TermContext context) {
+        BitVector term1 = (BitVector) terms[0];
+        BitVector term2 = (BitVector) terms[1];
         if (term1.bitwidth() == term2.bitwidth()) {
             return term1.sdiv(term2, context);
         } else {
@@ -128,7 +154,9 @@ public final class BuiltinBitVectorOperations {
         }
     }
 
-    public static Term udiv(BitVector term1, BitVector term2, TermContext context) {
+    public static Term udiv(Term[] terms, TermContext context) {
+        BitVector term1 = (BitVector) terms[0];
+        BitVector term2 = (BitVector) terms[1];
         if (term1.bitwidth() == term2.bitwidth()) {
             return term1.udiv(term2);
         } else {
@@ -136,7 +164,9 @@ public final class BuiltinBitVectorOperations {
         }
     }
 
-    public static Term srem(BitVector term1, BitVector term2, TermContext context) {
+    public static Term srem(Term[] terms, TermContext context) {
+        BitVector term1 = (BitVector) terms[0];
+        BitVector term2 = (BitVector) terms[1];
         if (term1.bitwidth() == term2.bitwidth()) {
             return term1.srem(term2, context);
         } else {
@@ -144,7 +174,9 @@ public final class BuiltinBitVectorOperations {
         }
     }
 
-    public static Term urem(BitVector term1, BitVector term2, TermContext context) {
+    public static Term urem(Term[] terms, TermContext context) {
+        BitVector term1 = (BitVector) terms[0];
+        BitVector term2 = (BitVector) terms[1];
         if (term1.bitwidth() == term2.bitwidth()) {
             return term1.urem(term2);
         } else {
@@ -152,7 +184,9 @@ public final class BuiltinBitVectorOperations {
         }
     }
 
-    public static BitVector and(BitVector term1, BitVector term2, TermContext context) {
+    public static Term and(Term[] terms, TermContext context) {
+        BitVector term1 = (BitVector) terms[0];
+        BitVector term2 = (BitVector) terms[1];
         if (term1.bitwidth() == term2.bitwidth()) {
             return term1.and(term2);
         } else {
@@ -160,7 +194,9 @@ public final class BuiltinBitVectorOperations {
         }
     }
 
-    public static BitVector or(BitVector term1, BitVector term2, TermContext context) {
+    public static Term or(Term[] terms, TermContext context) {
+        BitVector term1 = (BitVector) terms[0];
+        BitVector term2 = (BitVector) terms[1];
         if (term1.bitwidth() == term2.bitwidth()) {
             return term1.or(term2);
         } else {
@@ -168,7 +204,9 @@ public final class BuiltinBitVectorOperations {
         }
     }
 
-    public static BitVector xor(BitVector term1, BitVector term2, TermContext context) {
+    public static Term xor(Term[] terms, TermContext context) {
+        BitVector term1 = (BitVector) terms[0];
+        BitVector term2 = (BitVector) terms[1];
         if (term1.bitwidth() == term2.bitwidth()) {
             return term1.xor(term2);
         } else {
@@ -176,19 +214,27 @@ public final class BuiltinBitVectorOperations {
         }
     }
 
-    public static BitVector shl(BitVector term1, IntToken term2, TermContext context) {
+    public static Term shl(Term[] terms, TermContext context) {
+        BitVector term1 = (BitVector) terms[0];
+        IntToken term2 = (IntToken) terms[1];
         return term1.shl(term2);
     }
 
-    public static BitVector ashr(BitVector term1, IntToken term2, TermContext context) {
+    public static Term ashr(Term[] terms, TermContext context) {
+        BitVector term1 = (BitVector) terms[0];
+        IntToken term2 = (IntToken) terms[1];
         return term1.ashr(term2);
     }
 
-    public static BitVector lshr(BitVector term1, IntToken term2, TermContext context) {
+    public static Term lshr(Term[] terms, TermContext context) {
+        BitVector term1 = (BitVector) terms[0];
+        IntToken term2 = (IntToken) terms[1];
         return term1.lshr(term2);
     }
 
-    public static BoolToken slt(BitVector term1, BitVector term2, TermContext context) {
+    public static Term slt(Term[] terms, TermContext context) {
+        BitVector term1 = (BitVector) terms[0];
+        BitVector term2 = (BitVector) terms[1];
         if (term1.bitwidth() == term2.bitwidth()) {
             return term1.slt(term2);
         } else {
@@ -196,7 +242,9 @@ public final class BuiltinBitVectorOperations {
         }
     }
 
-    public static BoolToken ult(BitVector term1, BitVector term2, TermContext context) {
+    public static Term ult(Term[] terms, TermContext context) {
+        BitVector term1 = (BitVector) terms[0];
+        BitVector term2 = (BitVector) terms[1];
         if (term1.bitwidth() == term2.bitwidth()) {
             return term1.ult(term2);
         } else {
@@ -204,7 +252,9 @@ public final class BuiltinBitVectorOperations {
         }
     }
 
-    public static BoolToken sle(BitVector term1, BitVector term2, TermContext context) {
+    public static Term sle(Term[] terms, TermContext context) {
+        BitVector term1 = (BitVector) terms[0];
+        BitVector term2 = (BitVector) terms[1];
         if (term1.bitwidth() == term2.bitwidth()) {
             return term1.sle(term2);
         } else {
@@ -212,7 +262,9 @@ public final class BuiltinBitVectorOperations {
         }
     }
 
-    public static BoolToken ule(BitVector term1, BitVector term2, TermContext context) {
+    public static Term ule(Term[] terms, TermContext context) {
+        BitVector term1 = (BitVector) terms[0];
+        BitVector term2 = (BitVector) terms[1];
         if (term1.bitwidth() == term2.bitwidth()) {
             return term1.ule(term2);
         } else {
@@ -220,7 +272,9 @@ public final class BuiltinBitVectorOperations {
         }
     }
 
-    public static BoolToken sgt(BitVector term1, BitVector term2, TermContext context) {
+    public static Term sgt(Term[] terms, TermContext context) {
+        BitVector term1 = (BitVector) terms[0];
+        BitVector term2 = (BitVector) terms[1];
         if (term1.bitwidth() == term2.bitwidth()) {
             return term1.sgt(term2);
         } else {
@@ -228,7 +282,9 @@ public final class BuiltinBitVectorOperations {
         }
     }
 
-    public static BoolToken ugt(BitVector term1, BitVector term2, TermContext context) {
+    public static Term ugt(Term[] terms, TermContext context) {
+        BitVector term1 = (BitVector) terms[0];
+        BitVector term2 = (BitVector) terms[1];
         if (term1.bitwidth() == term2.bitwidth()) {
             return term1.ugt(term2);
         } else {
@@ -236,7 +292,9 @@ public final class BuiltinBitVectorOperations {
         }
     }
 
-    public static BoolToken sge(BitVector term1, BitVector term2, TermContext context) {
+    public static Term sge(Term[] terms, TermContext context) {
+        BitVector term1 = (BitVector) terms[0];
+        BitVector term2 = (BitVector) terms[1];
         if (term1.bitwidth() == term2.bitwidth()) {
             return term1.sge(term2);
         } else {
@@ -244,7 +302,9 @@ public final class BuiltinBitVectorOperations {
         }
     }
 
-    public static BoolToken uge(BitVector term1, BitVector term2, TermContext context) {
+    public static Term uge(Term[] terms, TermContext context) {
+        BitVector term1 = (BitVector) terms[0];
+        BitVector term2 = (BitVector) terms[1];
         if (term1.bitwidth() == term2.bitwidth()) {
             return term1.uge(term2);
         } else {
@@ -252,7 +312,9 @@ public final class BuiltinBitVectorOperations {
         }
     }
 
-    public static BoolToken eq(BitVector term1, BitVector term2, TermContext context) {
+    public static Term eq(Term[] terms, TermContext context) {
+        BitVector term1 = (BitVector) terms[0];
+        BitVector term2 = (BitVector) terms[1];
         if (term1.bitwidth() == term2.bitwidth()) {
             return term1.eq(term2);
         } else {
@@ -260,7 +322,9 @@ public final class BuiltinBitVectorOperations {
         }
     }
 
-    public static BoolToken ne(BitVector term1, BitVector term2, TermContext context) {
+    public static Term ne(Term[] terms, TermContext context) {
+        BitVector term1 = (BitVector) terms[0];
+        BitVector term2 = (BitVector) terms[1];
         if (term1.bitwidth() == term2.bitwidth()) {
             return term1.ne(term2);
         } else {
@@ -268,23 +332,23 @@ public final class BuiltinBitVectorOperations {
         }
     }
 
-    public static BitVector concatenate(BitVector term1, BitVector term2, TermContext context) {
+    public static Term concatenate(Term[] terms, TermContext context) {
+        BitVector term1 = (BitVector) terms[0];
+        BitVector term2 = (BitVector) terms[1];
         return term1.concatenate(term2);
     }
 
-    public static BitVector extract(
-            BitVector term,
-            IntToken beginIndex,
-            IntToken endIndex,
-            TermContext context) {
+    public static Term extract(Term[] terms, TermContext context) {
+        BitVector term = (BitVector) terms[0];
+        IntToken beginIndex = (IntToken) terms[1];
+        IntToken endIndex = (IntToken) terms[2];
         return term.extract(beginIndex.intValue(), endIndex.intValue());
     }
 
-    public static Term toDigits(
-            BitVector term,
-            IntToken bitwidth,
-            IntToken count,
-            TermContext context) {
+    public static Term toDigits(Term[] terms, TermContext context) {
+        BitVector term = (BitVector) terms[0];
+        IntToken bitwidth = (IntToken) terms[1];
+        IntToken count = (IntToken) terms[2];
         if (bitwidth.intValue() > 0 && bitwidth.intValue() * count.intValue() <= term.bitwidth) {
             List<Term> digits = ((List<BitVector>) term.toDigits(bitwidth.intValue(), count.intValue())).stream()
                     .map(t -> BuiltinListOperations.wrapListItem(t, context))
@@ -297,7 +361,8 @@ public final class BuiltinBitVectorOperations {
         }
     }
 
-    public static BitVector fromDigits(BuiltinList digitList, TermContext context) {
+    public static Term fromDigits(Term[] terms, TermContext context) {
+        BuiltinList digitList = (BuiltinList) terms[0];
         if (digitList.isGround()) {
             List<BitVector> digits;
             try {

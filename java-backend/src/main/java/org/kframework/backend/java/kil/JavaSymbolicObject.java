@@ -49,7 +49,7 @@ public abstract class JavaSymbolicObject<T extends JavaSymbolicObject<T>>
     volatile transient PSet<Variable> variableSet = null;
     volatile transient Boolean isGround = null;
     volatile transient Boolean isNormal = null;
-    volatile transient Set<ConjunctiveFormula> isEvaluated = Sets.newHashSet();
+    volatile transient Set<ConjunctiveFormula> isEvaluated = null;
     volatile transient Set<Term> userVariableSet = null;
 
     private Att att;
@@ -160,7 +160,7 @@ public abstract class JavaSymbolicObject<T extends JavaSymbolicObject<T>>
      * {@code ConjunctiveFormula}, false otherwise.
      */
     public boolean isEvaluated(ConjunctiveFormula constraint) {
-        return isEvaluated.contains(constraint);
+        return isEvaluated != null && isEvaluated.contains(constraint);
     }
 
     /**

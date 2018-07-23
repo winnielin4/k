@@ -53,69 +53,90 @@ public class BuiltinFloatOperations {
         return term1.exponent();
     }
 
-    public static IntToken precision(FloatToken term, TermContext context) {
+    public static Term precision(Term[] terms, TermContext context) {
+        FloatToken term = (FloatToken) terms[0];
         return IntToken.of(term.bigFloatValue().precision());
     }
 
-    public static IntToken exponent(FloatToken term, TermContext context) {
+    public static Term exponent(Term[] terms, TermContext context) {
+        FloatToken term = (FloatToken) terms[0];
         BinaryMathContext mc = getMathContext(term);
         return IntToken.of(term.bigFloatValue().exponent(mc.minExponent, mc.maxExponent));
     }
 
-    public static IntToken exponentBits(FloatToken term, TermContext context) {
+    public static Term exponentBits(Term[] terms, TermContext context) {
+        FloatToken term = (FloatToken) terms[0];
         return IntToken.of(term.exponent());
     }
 
-    public static BoolToken sign(FloatToken term, TermContext context) {
+    public static Term sign(Term[] terms, TermContext context) {
+        FloatToken term = (FloatToken) terms[0];
         return BoolToken.of(term.bigFloatValue().sign());
     }
 
-    public static BitVector<?> significand(FloatToken term, TermContext context) {
+    public static Term significand(Term[] terms, TermContext context) {
+        FloatToken term = (FloatToken) terms[0];
         BinaryMathContext mc = getMathContext(term);
         return BitVector.of(term.bigFloatValue().significand(mc.minExponent, mc.maxExponent), mc.precision);
     }
 
-    public static FloatToken add(FloatToken term1, FloatToken term2, TermContext context) {
+    public static Term add(Term[] terms, TermContext context) {
+        FloatToken term1 = (FloatToken) terms[0];
+        FloatToken term2 = (FloatToken) terms[1];
         return FloatToken.of(term1.bigFloatValue().add(term2.bigFloatValue(),
                 getMathContext(term1, term2)), getExponent(term1, term2));
     }
 
-     public static FloatToken sub(FloatToken term1, FloatToken term2, TermContext context) {
+    public static Term sub(Term[] terms, TermContext context) {
+        FloatToken term1 = (FloatToken) terms[0];
+        FloatToken term2 = (FloatToken) terms[1];
          return FloatToken.of(term1.bigFloatValue().subtract(term2.bigFloatValue(),
                  getMathContext(term1, term2)), getExponent(term1, term2));
     }
 
-    public static FloatToken mul(FloatToken term1, FloatToken term2, TermContext context) {
+    public static Term mul(Term[] terms, TermContext context) {
+        FloatToken term1 = (FloatToken) terms[0];
+        FloatToken term2 = (FloatToken) terms[1];
          return FloatToken.of(term1.bigFloatValue().multiply(term2.bigFloatValue(),
                  getMathContext(term1, term2)), getExponent(term1, term2));
     }
 
-    public static FloatToken div(FloatToken term1, FloatToken term2, TermContext context) {
+    public static Term div(Term[] terms, TermContext context) {
+        FloatToken term1 = (FloatToken) terms[0];
+        FloatToken term2 = (FloatToken) terms[1];
         return FloatToken.of(term1.bigFloatValue().divide(term2.bigFloatValue(),
                 getMathContext(term1, term2)), getExponent(term1, term2));
     }
 
-    public static FloatToken rem(FloatToken term1, FloatToken term2, TermContext context) {
+    public static Term rem(Term[] terms, TermContext context) {
+        FloatToken term1 = (FloatToken) terms[0];
+        FloatToken term2 = (FloatToken) terms[1];
         return FloatToken.of(term1.bigFloatValue().remainder(term2.bigFloatValue(),
                 getMathContext(term1, term2)), getExponent(term1, term2));
     }
 
-    public static FloatToken pow(FloatToken term1, FloatToken term2, TermContext context) {
+    public static Term pow(Term[] terms, TermContext context) {
+        FloatToken term1 = (FloatToken) terms[0];
+        FloatToken term2 = (FloatToken) terms[1];
         return FloatToken.of(term1.bigFloatValue().pow(term2.bigFloatValue(),
                 getMathContext(term1, term2)), getExponent(term1, term2));
     }
 
-    public static FloatToken root(FloatToken term1, IntToken term2, TermContext context) {
+    public static Term root(Term[] terms, TermContext context) {
+        FloatToken term1 = (FloatToken) terms[0];
+        IntToken term2 = (IntToken) terms[1];
         return FloatToken.of(term1.bigFloatValue().root(term2.intValue(),
                 getMathContext(term1)), term1.exponent());
     }
 
-    public static FloatToken unaryMinus(FloatToken term, TermContext context) {
+    public static Term unaryMinus(Term[] terms, TermContext context) {
+        FloatToken term = (FloatToken) terms[0];
         return FloatToken.of(term.bigFloatValue().negate(
                 getMathContext(term)), term.exponent());
     }
 
-    public static FloatToken abs(FloatToken term, TermContext context) {
+    public static Term abs(Term[] terms, TermContext context) {
+        FloatToken term = (FloatToken) terms[0];
         return FloatToken.of(term.bigFloatValue().abs(
                 getMathContext(term)), term.exponent());
     }
@@ -128,7 +149,10 @@ public class BuiltinFloatOperations {
      * exponents a float can have. MPFR does not support floats with 1 bit of precision.
      * bits of the float.
      */
-    public static FloatToken round(FloatToken term, IntToken precision, IntToken exponent, TermContext context) {
+    public static Term round(Term[] terms, TermContext context) {
+        FloatToken term = (FloatToken) terms[0];
+        IntToken precision = (IntToken) terms[1];
+        IntToken exponent = (IntToken) terms[2];
         if (precision.intValue() < 2 || exponent.intValue() < 2) {
             return null;
         }
@@ -137,57 +161,71 @@ public class BuiltinFloatOperations {
                 exponent.intValue());
     }
 
-    public static FloatToken exp(FloatToken term, TermContext context) {
+    public static Term exp(Term[] terms, TermContext context) {
+        FloatToken term = (FloatToken) terms[0];
         return FloatToken.of(term.bigFloatValue().exp(
                 getMathContext(term)), term.exponent());
     }
 
-    public static FloatToken log(FloatToken term, TermContext context) {
+    public static Term log(Term[] terms, TermContext context) {
+        FloatToken term = (FloatToken) terms[0];
         return FloatToken.of(term.bigFloatValue().log(
                 getMathContext(term)), term.exponent());
     }
 
-    public static FloatToken sin(FloatToken term, TermContext context) {
+    public static Term sin(Term[] terms, TermContext context) {
+        FloatToken term = (FloatToken) terms[0];
         return FloatToken.of(term.bigFloatValue().sin(
                 getMathContext(term)), term.exponent());
     }
 
-    public static FloatToken cos(FloatToken term, TermContext context) {
+    public static Term cos(Term[] terms, TermContext context) {
+        FloatToken term = (FloatToken) terms[0];
         return FloatToken.of(term.bigFloatValue().cos(
                 getMathContext(term)), term.exponent());
     }
 
-    public static FloatToken tan(FloatToken term, TermContext context) {
+    public static Term tan(Term[] terms, TermContext context) {
+        FloatToken term = (FloatToken) terms[0];
         return FloatToken.of(term.bigFloatValue().tan(
                 getMathContext(term)), term.exponent());
     }
 
-    public static FloatToken asin(FloatToken term, TermContext context) {
+    public static Term asin(Term[] terms, TermContext context) {
+        FloatToken term = (FloatToken) terms[0];
         return FloatToken.of(term.bigFloatValue().asin(
                 getMathContext(term)), term.exponent());
     }
 
-    public static FloatToken acos(FloatToken term, TermContext context) {
+    public static Term acos(Term[] terms, TermContext context) {
+        FloatToken term = (FloatToken) terms[0];
         return FloatToken.of(term.bigFloatValue().acos(
                 getMathContext(term)), term.exponent());
     }
 
-    public static FloatToken atan(FloatToken term, TermContext context) {
+    public static Term atan(Term[] terms, TermContext context) {
+        FloatToken term = (FloatToken) terms[0];
         return FloatToken.of(term.bigFloatValue().atan(
                 getMathContext(term)), term.exponent());
     }
 
-    public static FloatToken atan2(FloatToken term1, FloatToken term2, TermContext context) {
+    public static Term atan2(Term[] terms, TermContext context) {
+        FloatToken term1 = (FloatToken) terms[0];
+        FloatToken term2 = (FloatToken) terms[1];
         return FloatToken.of(BigFloat.atan2(term1.bigFloatValue(), term2.bigFloatValue(),
                 getMathContext(term1, term2)), getExponent(term1, term2));
     }
 
-    public static FloatToken max(FloatToken term1, FloatToken term2, TermContext context) {
+    public static Term max(Term[] terms, TermContext context) {
+        FloatToken term1 = (FloatToken) terms[0];
+        FloatToken term2 = (FloatToken) terms[1];
         return FloatToken.of(BigFloat.max(term1.bigFloatValue(), term2.bigFloatValue(),
                 getMathContext(term1, term2)), getExponent(term1, term2));
     }
 
-    public static FloatToken min(FloatToken term1, FloatToken term2, TermContext context) {
+    public static Term min(Term[] terms, TermContext context) {
+        FloatToken term1 = (FloatToken) terms[0];
+        FloatToken term2 = (FloatToken) terms[1];
         return FloatToken.of(BigFloat.min(term1.bigFloatValue(), term2.bigFloatValue(),
                 getMathContext(term1, term2)), getExponent(term1, term2));
     }
@@ -197,27 +235,40 @@ public class BuiltinFloatOperations {
      * in order to preserve the behavior that -0.0 ==Float 0.0 and NaN =/=Float NaN. ==K can be used to compare
      * identity on floating point numbers.
      */
-    public static BoolToken eq(FloatToken term1, FloatToken term2, TermContext context) {
+    public static Term eq(Term[] terms, TermContext context) {
+        FloatToken term1 = (FloatToken) terms[0];
+        FloatToken term2 = (FloatToken) terms[1];
         return BoolToken.of(term1.bigFloatValue().equalTo(term2.bigFloatValue()));
     }
 
-    public static BoolToken gt(FloatToken term1, FloatToken term2, TermContext context) {
+    public static Term gt(Term[] terms, TermContext context) {
+        FloatToken term1 = (FloatToken) terms[0];
+        FloatToken term2 = (FloatToken) terms[1];
         return BoolToken.of(term1.bigFloatValue().greaterThan(term2.bigFloatValue()));
     }
 
-    public static BoolToken ge(FloatToken term1, FloatToken term2, TermContext context) {
+    public static Term ge(Term[] terms, TermContext context) {
+        FloatToken term1 = (FloatToken) terms[0];
+        FloatToken term2 = (FloatToken) terms[1];
         return BoolToken.of(term1.bigFloatValue().greaterThanOrEqualTo(term2.bigFloatValue()));
     }
 
-    public static BoolToken lt(FloatToken term1, FloatToken term2, TermContext context) {
+    public static Term lt(Term[] terms, TermContext context) {
+        FloatToken term1 = (FloatToken) terms[0];
+        FloatToken term2 = (FloatToken) terms[1];
         return BoolToken.of(term1.bigFloatValue().lessThan(term2.bigFloatValue()));
     }
 
-    public static BoolToken le(FloatToken term1, FloatToken term2, TermContext context) {
+    public static Term le(Term[] terms, TermContext context) {
+        FloatToken term1 = (FloatToken) terms[0];
+        FloatToken term2 = (FloatToken) terms[1];
         return BoolToken.of(term1.bigFloatValue().lessThanOrEqualTo(term2.bigFloatValue()));
     }
 
-    public static FloatToken int2float(IntToken term, IntToken precision, IntToken exponent, TermContext context) {
+    public static Term int2float(Term[] terms, TermContext context) {
+        IntToken term = (IntToken) terms[0];
+        IntToken precision = (IntToken) terms[1];
+        IntToken exponent = (IntToken) terms[2];
         return FloatToken.of(new BigFloat(term.bigIntegerValue(),
                 new BinaryMathContext(precision.intValue(), exponent.intValue())), exponent.intValue());
     }
@@ -226,31 +277,39 @@ public class BuiltinFloatOperations {
      * Rounds {@code term} to an integer by truncating it. Function is only
      * defined on ordinary numbers (i.e. not NaN or infinity).
      */
-    public static IntToken float2int(FloatToken term, TermContext context) {
+    public static Term float2int(Term[] terms, TermContext context) {
+        FloatToken term = (FloatToken) terms[0];
         return IntToken.of(term.bigFloatValue().rint(getMathContext(term)
                 .withRoundingMode(RoundingMode.DOWN)).toBigIntegerExact());
     }
 
-    public static FloatToken ceil(FloatToken term, TermContext context) {
+    public static Term ceil(Term[] terms, TermContext context) {
+        FloatToken term = (FloatToken) terms[0];
         return FloatToken.of(term.bigFloatValue().rint(getMathContext(term)
                 .withRoundingMode(RoundingMode.CEILING)), term.exponent());
     }
 
-    public static FloatToken floor(FloatToken term, TermContext context) {
+    public static Term floor(Term[] terms, TermContext context) {
+        FloatToken term = (FloatToken) terms[0];
         return FloatToken.of(term.bigFloatValue().rint(getMathContext(term)
                 .withRoundingMode(RoundingMode.FLOOR)), term.exponent());
     }
 
-    public static BoolToken isNaN(FloatToken term, TermContext context) {
+    public static Term isNaN(Term[] terms, TermContext context) {
+        FloatToken term = (FloatToken) terms[0];
         return BoolToken.of(term.bigFloatValue().isNaN());
     }
 
-    public static FloatToken maxValue(IntToken precision, IntToken exponentBits, TermContext context) {
+    public static Term maxValue(Term[] terms, TermContext context) {
+        IntToken precision = (IntToken) terms[0];
+        IntToken exponentBits = (IntToken) terms[1];
         BinaryMathContext mc = new BinaryMathContext(precision.intValue(), exponentBits.intValue());
         return FloatToken.of(BigFloat.maxValue(mc.precision, mc.maxExponent), exponentBits.intValue());
     }
 
-    public static FloatToken minValue(IntToken precision, IntToken exponentBits, TermContext context) {
+    public static Term minValue(Term[] terms, TermContext context) {
+        IntToken precision = (IntToken) terms[0];
+        IntToken exponentBits = (IntToken) terms[1];
         BinaryMathContext mc = new BinaryMathContext(precision.intValue(), exponentBits.intValue());
         return FloatToken.of(BigFloat.minValue(mc.precision, mc.minExponent), exponentBits.intValue());
     }

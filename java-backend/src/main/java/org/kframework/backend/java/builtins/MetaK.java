@@ -39,7 +39,9 @@ public class MetaK {
      *         {@link BoolToken#FALSE} if they cannot be unified; otherwise,
      *         {@code null}
      */
-    public static BoolToken unifiable(Term term1, Term term2, TermContext context) {
+    public static Term unifiable(Term[] terms, TermContext context) {
+        Term term1 = terms[0];
+        Term term2 = terms[1];
         ConjunctiveFormula constraint = ConjunctiveFormula.of(context.global());
         if (term1 instanceof KList && term2 instanceof KList) {
             if (((KList) term1).size() != ((KList) term2).size()) {
@@ -102,7 +104,9 @@ public class MetaK {
      *         if the given {@code BuiltinSet} has a frame or contains not only
      *         {@code MetaVariable}s
      */
-    public static Term rename(Term term, BuiltinSet builtinSet, TermContext context) {
+    public static Term rename(Term[] terms, TermContext context) {
+        Term term = terms[0];
+        BuiltinSet builtinSet = (BuiltinSet) terms[1];
         if (builtinSet.hasFrame() /* || !builtinSet.operations().isEmpty() */) {
             return term;
         }
@@ -135,13 +139,16 @@ public class MetaK {
      *            the term context
      * @return the resulting term after renaming
      */
-    public static Term renameVariables(Term term, TermContext context) {
+    public static Term renameVariables(Term[] terms, TermContext context) {
+        Term term = terms[0];
         Set<Variable> variables = term.variableSet();
         return term.substitute(Variable.rename(variables));
     }
 
-    public static Term freezeVariables(Term termToFreeze, Term termWithBoundVars, TermContext context) {
-        BuiltinSet variables = trueVariables(termWithBoundVars, context);
+    public static Term freezeVariables(Term[] terms, TermContext context) {
+        Term termToFreeze = terms[0];
+        Term termWithBoundVars = terms[1];
+        BuiltinSet variables = (BuiltinSet) trueVariables(new Term[] {termWithBoundVars}, context);
         return (Term) termToFreeze.accept(new CopyOnWriteTransformer(context) {
             @Override
             public JavaSymbolicObject<Term> transform(Variable variable) {
@@ -157,7 +164,8 @@ public class MetaK {
      * Returns all {@link Variable}s inside a given {@link Term} as a
      * {@link BuiltinSet} of {@link MetaVariable}s.
      */
-    public static BuiltinSet variables(Term term, TermContext context) {
+    public static Term variables(Term[] terms, TermContext context) {
+        Term term = terms[0];
         BuiltinSet.Builder builder = BuiltinSet.builder(context.global());
         for (Variable variable : term.variableSet()) {
             builder.add(new MetaVariable(variable));
@@ -169,13 +177,15 @@ public class MetaK {
      * Returns all {@link Variable}s inside a given {@link Term} as a
      * {@link BuiltinSet}.
      */
-    public static BuiltinSet trueVariables(Term term, TermContext context) {
+    public static Term trueVariables(Term[] terms, TermContext context) {
+        Term term = terms[0];
         BuiltinSet.Builder builder = BuiltinSet.builder(context.global());
         builder.addAll(term.variableSet());
         return (BuiltinSet) builder.build();
     }
 
-    public static Term variablesMap(Term term, TermContext context) {
+    public static Term variablesMap(Term[] terms, TermContext context) {
+        Term term = terms[0];
         BuiltinMap.Builder builder = BuiltinMap.builder(context.global());
         for (Variable variable : term.variableSet()) {
             builder.put(new MetaVariable(variable), variable);
@@ -192,18 +202,20 @@ public class MetaK {
      *            the term context
      * @return the K label
      */
-    public static KItem getKLabel(KItem kItem, TermContext context) {
+    public static Term getKLabel(Term[] terms, TermContext context) {
+        KItem kItem = (KItem) terms[0];
         // TODO(AndreiS): handle KLabel variables
         return KItem.of(new KLabelInjection(kItem.kLabel()), KList.EMPTY, context.global(),
             kItem.att());
     }
 
-    public static Term configuration(TermContext context) {
+    public static Term configuration(Term[] terms, TermContext context) {
         //return KLabelInjection.injectionOf(context.getTopTerm(), context.global());
         return context.getTopTerm();
     }
 
-    public static BoolToken isConcrete(Term term, TermContext context) {
+    public static Term isConcrete(Term[] terms, TermContext context) {
+        Term term = terms[0];
         return BoolToken.of(term.isConcrete());
     }
 }

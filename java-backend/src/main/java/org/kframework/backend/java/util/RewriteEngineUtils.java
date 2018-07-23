@@ -35,6 +35,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Utilities for the Java rewrite engine.
@@ -178,10 +179,10 @@ public class RewriteEngineUtils {
      */
     public static List<Substitution<Variable, Term>> evaluateConditions(
             Rule rule,
-            List<Substitution<Variable, Term>> substitutions,
+            Stream<Substitution<Variable, Term>> substitutions,
             TermContext context) {
         /* handle fresh variables, data structure lookups, and side conditions */
-        return substitutions.stream()
+        return substitutions
                 .map(s -> evaluateConditions(rule, ImmutableMapSubstitution.from(s), context))
                 .filter(s -> s != null)
                 .collect(Collectors.toList());

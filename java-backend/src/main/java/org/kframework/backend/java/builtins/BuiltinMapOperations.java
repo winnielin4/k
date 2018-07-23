@@ -23,24 +23,30 @@ import java.util.stream.Collectors;
  */
 public class BuiltinMapOperations {
 
-    public static Term constructor(Term map1, Term map2, TermContext context) {
+    public static Term constructor(Term[] terms, TermContext context) {
+        Term map1 = terms[0];
+        Term map2 = terms[1];
         if (map1.sort() != Sort.MAP || map2.sort() != Sort.MAP) {
             throw new IllegalArgumentException();
         }
         return BuiltinMap.concatenate(context.global(), map1, map2);
     }
 
-    public static Term unit(TermContext context) {
+    public static Term unit(Term[] terms, TermContext context) {
         return BuiltinMap.builder(context.global()).build();
     }
 
-    public static Term entry(Term key, Term value, TermContext context) {
+    public static Term entry(Term[] terms, TermContext context) {
+        Term key = terms[0];
+        Term value = terms[1];
         BuiltinMap.Builder builder = new BuiltinMap.Builder(context.global());
         builder.put(key, value);
         return builder.build();
     }
 
-    public static Term lookup(Term map, Term key, TermContext context) {
+    public static Term lookup(Term[] terms, TermContext context) {
+        Term map = terms[0];
+        Term key = terms[1];
         while (DataStructures.isMapUpdate(map)) {
             Term value = builtinMapLookup(DataStructures.getMapUpdateMap(map), key);
             if (!(value instanceof Bottom)) {
@@ -71,19 +77,26 @@ public class BuiltinMapOperations {
         }
     }
 
-    public static Term update(Term map, Term key, Term value, TermContext context) {
+    public static Term update(Term[] terms, TermContext context) {
+        Term map = terms[0];
+        Term key = terms[1];
+        Term value = terms[2];
         BuiltinMap.Builder builder = BuiltinMap.builder(context.global());
         builder.put(key, value);
-        return updateAll(map, (BuiltinMap) builder.build(), context);
+        return updateAll(new Term[] {map, (BuiltinMap) builder.build()}, context);
     }
 
-    public static Term remove(Term map, Term key, TermContext context) {
+    public static Term remove(Term[] terms, TermContext context) {
+        Term map = terms[0];
+        Term key = terms[1];
         BuiltinSet.Builder builder = BuiltinSet.builder(context.global());
         builder.add(key);
-        return removeAll(map, (BuiltinSet) builder.build(), context);
+        return removeAll(new Term[] {map, (BuiltinSet) builder.build()}, context);
     }
 
-    public static Term difference(BuiltinMap map1, BuiltinMap map2, TermContext context) {
+    public static Term difference(Term[] terms, TermContext context) {
+        BuiltinMap map1 = (BuiltinMap) terms[0];
+        BuiltinMap map2 = (BuiltinMap) terms[1];
         BuiltinMap.Builder builder = BuiltinMap.builder(context.global());
         if (!map1.isGround() || !map2.isGround()) {
             if (map1.getEntries().entrySet().containsAll(map2.getEntries().entrySet())
@@ -106,7 +119,9 @@ public class BuiltinMapOperations {
         }
     }
 
-    public static Term updateAll(Term map, BuiltinMap updateBuiltinMap, TermContext context) {
+    public static Term updateAll(Term[] terms, TermContext context) {
+        Term map = terms[0];
+        BuiltinMap updateBuiltinMap = (BuiltinMap) terms[1];
         if (!updateBuiltinMap.isConcreteCollection()) {
             return null;
         }
@@ -131,7 +146,9 @@ public class BuiltinMapOperations {
         }
     }
 
-    public static Term removeAll(Term map, BuiltinSet removeBuiltinSet, TermContext context) {
+    public static Term removeAll(Term[] terms, TermContext context) {
+        Term map = terms[0];
+        BuiltinSet removeBuiltinSet = (BuiltinSet) terms[1];
         if (!removeBuiltinSet.isConcreteCollection()) {
             return null;
         }
@@ -159,7 +176,8 @@ public class BuiltinMapOperations {
         }
     }
 
-    public static BuiltinSet keys(BuiltinMap map, TermContext context) {
+    public static Term keys(Term[] terms, TermContext context) {
+        BuiltinMap map = (BuiltinMap) terms[0];
         if (map.getEntries().isEmpty() && !map.isEmpty()) {
             return null;
         }
@@ -174,7 +192,9 @@ public class BuiltinMapOperations {
         return (BuiltinSet) builder.build();
     }
 
-    public static BoolToken in_keys(Term key, BuiltinMap map, TermContext context) {
+    public static Term in_keys(Term[] terms, TermContext context) {
+        Term key = terms[0];
+        BuiltinMap map = (BuiltinMap) terms[1];
         boolean in = map.getEntries().containsKey(key);
         BoolToken r = BoolToken.of(in);
         if (in) {
@@ -188,7 +208,8 @@ public class BuiltinMapOperations {
         }
     }
 
-    public static Term values(BuiltinMap map, TermContext context) {
+    public static Term values(Term[] terms, TermContext context) {
+        BuiltinMap map = (BuiltinMap) terms[0];
         if (!map.isConcreteCollection()) {
             return null;
         }
@@ -199,7 +220,9 @@ public class BuiltinMapOperations {
         return BuiltinList.builder(context.global()).addAll(elements).build();
     }
 
-    public static BoolToken inclusion(BuiltinMap map1, BuiltinMap map2, TermContext context) {
+    public static Term inclusion(Term[] terms, TermContext context) {
+        BuiltinMap map1 = (BuiltinMap) terms[0];
+        BuiltinMap map2 = (BuiltinMap) terms[1];
         if (!map1.isGround() || !map2.isGround()) {
             return null;
         }
@@ -207,7 +230,8 @@ public class BuiltinMapOperations {
         return BoolToken.of(map2.getEntries().entrySet().containsAll(map1.getEntries().entrySet()));
     }
 
-    public static Term choice(BuiltinMap map, TermContext context) {
+    public static Term choice(Term[] terms, TermContext context) {
+        BuiltinMap map = (BuiltinMap) terms[0];
         if (!map.getEntries().isEmpty()) {
             return map.getEntries().keySet().iterator().next();
         } else if (map.isEmpty()) {

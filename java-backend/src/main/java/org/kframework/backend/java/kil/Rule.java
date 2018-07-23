@@ -57,6 +57,8 @@ public class Rule extends JavaSymbolicObject<Rule> {
 
     // TODO(YilongL): make it final
     private boolean isSortPredicate;
+    private final boolean isFunction;
+    private final boolean isConcrete;
     private final Sort predSort;
     private final KItem sortPredArg;
 
@@ -82,7 +84,10 @@ public class Rule extends JavaSymbolicObject<Rule> {
         this.lookups = lookups;
         this.global = global;
 
-        isSortPredicate = isFunction() && definedKLabel().isSortPredicate();
+        isConcrete = att.contains(Attribute.CONCRETE_FUNCTION_KEY);
+        isFunction = att().contains(Attribute.FUNCTION_KEY)
+                && !att().contains(Attribute.PATTERN_FOLDING_KEY);
+        isSortPredicate = isFunction && definedKLabel().isSortPredicate();
         if (isSortPredicate) {
             predSort = definedKLabel().getPredicateSort();
 
@@ -226,12 +231,11 @@ public class Rule extends JavaSymbolicObject<Rule> {
     }
 
     public boolean isFunction() {
-        return att().contains(Attribute.FUNCTION_KEY)
-               && !att().contains(Attribute.PATTERN_FOLDING_KEY);
+        return isFunction;
     }
 
     public boolean isConcrete() {
-        return att().contains(Attribute.CONCRETE_FUNCTION_KEY);
+        return isConcrete;
     }
 
     public boolean isAnywhere() {

@@ -30,8 +30,8 @@ public class BuiltinMapTest {
         BuiltinMap updateMap = (BuiltinMap) builder.build();
 
         BuiltinMap resultMap = (BuiltinMap) BuiltinMapOperations.updateAll(
-                builtinMap,
-                updateMap,
+                new Term[] {builtinMap,
+                updateMap},
                 termContext);
 
         Assert.assertEquals(true, resultMap.isConcreteCollection());
@@ -57,8 +57,8 @@ public class BuiltinMapTest {
         BuiltinMap updateMap = (BuiltinMap) builder.build();
 
         BuiltinMap resultMap = (BuiltinMap) BuiltinMapOperations.updateAll(
-                builtinMap,
-                updateMap,
+                new Term[] {builtinMap,
+                updateMap},
                 termContext);
 
         Assert.assertEquals(new Variable("M", Sort.MAP), builtinMap.frame());
@@ -84,8 +84,8 @@ public class BuiltinMapTest {
         BuiltinMap updateMap = (BuiltinMap) builder.build();
 
         Term resultMap = BuiltinMapOperations.updateAll(
-                builtinMap,
-                updateMap,
+                new Term[] {builtinMap,
+                updateMap},
                 termContext);
 
         Assert.assertEquals(null, resultMap);

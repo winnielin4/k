@@ -56,36 +56,4 @@ public class SortMembership {
             return kItem;
         }
     }
-
-    public static Term isBuiltin(Term term, TermContext context) {
-        // TODO(AndreiS): fix this predicate based on sorts
-        if (term.kind().isComputational()) {
-            term = KCollection.downKind(term);
-        }
-
-        if (term instanceof Token || term instanceof BuiltinList || term instanceof BuiltinSet
-                || term instanceof BuiltinMap) {
-            return BoolToken.TRUE;
-        } else if (term.isGround()) {
-            return BoolToken.FALSE;
-        } else {
-            throw new IllegalArgumentException("argument " + term + " is not ground");
-        }
-    }
-
-    public static Term isToken(Term term, TermContext context) {
-        // TODO(AndreiS): fix this predicate based on sorts
-        if (term.kind().isComputational()) {
-            term = KCollection.downKind(term);
-        }
-
-        if (term instanceof Token) {
-            return BoolToken.TRUE;
-        } else if (term.isGround()) {
-            return BoolToken.FALSE;
-        } else {
-            return null;
-        }
-    }
-
 }

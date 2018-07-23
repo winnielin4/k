@@ -99,12 +99,7 @@ public class BuiltinFunction {
     public Term invoke(TermContext context, KLabelConstant label, Term... arguments)
             throws Throwable {
     // ENABLE EXCEPTION CHECKSTYLE
-        Object[] args = Arrays.copyOf(arguments, arguments.length + 1, Object[].class);
-        args[arguments.length] = context;
-        // TODO(YilongL): is reflection/exception really the best way to
-        // deal with builtin functions? builtin functions are supposed to be
-        // super-fast...
-        return (Term) table.get(label).invokeWithArguments(args);
+        return (Term) table.get(label).invokeExact(arguments, context);
     }
 
     /**

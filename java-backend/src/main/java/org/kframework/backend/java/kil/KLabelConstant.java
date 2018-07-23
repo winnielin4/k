@@ -9,6 +9,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.kframework.attributes.Att;
 import org.kframework.backend.java.symbolic.Transformer;
 import org.kframework.backend.java.symbolic.Visitor;
+import org.kframework.builtin.KLabels;
 import org.kframework.kil.Attribute;
 import org.kframework.kil.Attributes;
 import org.kframework.utils.errorsystem.KEMException;
@@ -66,6 +67,10 @@ public class KLabelConstant extends KLabel implements org.kframework.kore.KLabel
 
     private final boolean isSortPredicate;
 
+    private final boolean isMetaBinder;
+
+    private final Kind kItemKind;
+
     private final Sort predicateSort;
 
     private final String smtlib;
@@ -102,7 +107,13 @@ public class KLabelConstant extends KLabel implements org.kframework.kore.KLabel
         this.isSortPredicate = predicateSort != null;
         this.isFunction = isFunction;
         this.isPattern = isPattern;
+        this.isMetaBinder = getAttr("metabinder") != null;
         this.smtlib = smtlib;
+        if (KLabels.DOTK.name().equals(label) || KLabels.KSEQ.name().equals(label)) {
+            kItemKind = Kind.K;
+        } else {
+            kItemKind = Kind.KITEM;
+        } 
     }
 
     /**
@@ -122,6 +133,10 @@ public class KLabelConstant extends KLabel implements org.kframework.kore.KLabel
                         definition.signaturesOf(label.name()),
                         definition.allSorts(),
                         definition.kLabelAttributesOf(label)));
+    }
+
+    public Kind kItemKind() {
+        return kItemKind;
     }
 
     /**
@@ -248,7 +263,7 @@ public class KLabelConstant extends KLabel implements org.kframework.kore.KLabel
     }
 
     public boolean isMetaBinder() {
-        return getAttr("metabinder") != null;
+        return isMetaBinder;
     }
 
     public boolean isBinder() {

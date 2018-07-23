@@ -20,10 +20,11 @@ import org.kframework.utils.errorsystem.KEMException;
 public class FreshOperations {
 
     public static Term freshOfSort(Sort sort, TermContext context) {
-        return fresh(StringToken.of(sort.toString()), context);
+        return fresh(new Term[] {StringToken.of(sort.toString())}, context);
     }
 
-    public static Term fresh(StringToken term, TermContext context) {
+    public static Term fresh(Term[] terms, TermContext context) {
+        StringToken term = (StringToken) terms[0];
         KLabel name = context.definition().freshFunctionNames().get(Sort.parse(term.stringValue()));
         if (name == null) {
             throw KEMException.criticalError("Attempting to generate a fresh symbol of sort " + term.stringValue()

@@ -23,11 +23,13 @@ import java.util.Map;
  */
 public class BuiltinIOOperations {
 
-    public static Term getTime(TermContext termContext) {
+    public static Term getTime(Term[] terms, TermContext termContext) {
         return IntToken.of(System.currentTimeMillis());
     }
 
-    public static Term open(StringToken term1, StringToken term2, TermContext termContext) {
+    public static Term open(Term[] terms, TermContext termContext) {
+        StringToken term1 = (StringToken) terms[0];
+        StringToken term2 = (StringToken) terms[1];
         FileSystem fs = termContext.fileSystem();
         try {
             return IntToken.of(fs.open(term1.stringValue(), term2.stringValue()));
@@ -36,7 +38,8 @@ public class BuiltinIOOperations {
         }
     }
 
-    public static Term tell(IntToken term, TermContext termContext) {
+    public static Term tell(Term[] terms, TermContext termContext) {
+        IntToken term = (IntToken) terms[0];
         FileSystem fs = termContext.fileSystem();
         try {
             return IntToken.of(fs.get(term.longValue()).tell());
@@ -45,7 +48,8 @@ public class BuiltinIOOperations {
         }
     }
 
-    public static Term getc(IntToken term, TermContext termContext) {
+    public static Term getc(Term[] terms, TermContext termContext) {
+        IntToken term = (IntToken) terms[0];
         FileSystem fs = termContext.fileSystem();
         try {
             return IntToken.of(fs.get(term.longValue()).getc() & 0xff);
@@ -54,7 +58,9 @@ public class BuiltinIOOperations {
         }
     }
 
-    public static Term read(IntToken term1, IntToken term2, TermContext termContext) {
+    public static Term read(Term[] terms, TermContext termContext) {
+        IntToken term1 = (IntToken) terms[0];
+        IntToken term2 = (IntToken) terms[1];
         FileSystem fs = termContext.fileSystem();
         try {
             return StringToken.of(fs.get(term1.longValue()).read(term2.intValue()));
@@ -63,7 +69,8 @@ public class BuiltinIOOperations {
         }
     }
 
-    public static Term close(IntToken term, TermContext termContext) {
+    public static Term close(Term[] terms, TermContext termContext) {
+        IntToken term = (IntToken) terms[0];
         FileSystem fs = termContext.fileSystem();
         try {
             fs.close(term.longValue());
@@ -73,7 +80,9 @@ public class BuiltinIOOperations {
         }
     }
 
-    public static Term seek(IntToken term1, IntToken term2, TermContext termContext) {
+    public static Term seek(Term[] terms, TermContext termContext) {
+        IntToken term1 = (IntToken) terms[0];
+        IntToken term2 = (IntToken) terms[1];
         FileSystem fs = termContext.fileSystem();
         try {
             fs.get(term1.longValue()).seek(term2.longValue());
@@ -83,7 +92,9 @@ public class BuiltinIOOperations {
         }
     }
 
-    public static Term putc(IntToken term1, IntToken term2, TermContext termContext) {
+    public static Term putc(Term[] terms, TermContext termContext) {
+        IntToken term1 = (IntToken) terms[0];
+        IntToken term2 = (IntToken) terms[1];
         FileSystem fs = termContext.fileSystem();
         try {
             fs.get(term1.longValue()).putc(term2.unsignedByteValue());
@@ -92,7 +103,9 @@ public class BuiltinIOOperations {
             return processIOException(e.getMessage(), termContext);
         }
     }
-    public static Term write(IntToken term1, StringToken term2, TermContext termContext) {
+    public static Term write(Term[] terms, TermContext termContext) {
+        IntToken term1 = (IntToken) terms[0];
+        StringToken term2 = (StringToken) terms[1];
         FileSystem fs = termContext.fileSystem();
         try {
             fs.get(term1.longValue()).write(term2.byteArrayValue());
@@ -104,15 +117,8 @@ public class BuiltinIOOperations {
         }
     }
 
-    public static Term parse(StringToken term1, StringToken term2, TermContext termContext) {
-        throw new RuntimeException("Not implemented!");
-    }
-
-    public static Term parseInModule(StringToken input, StringToken startSymbol, StringToken moduleName, TermContext termContext) {
-        throw new RuntimeException("Not implemented!");
-    }
-
-    public static Term system(StringToken term, TermContext termContext) {
+    public static Term system(Term[] terms, TermContext termContext) {
+        StringToken term = (StringToken) terms[0];
         Map<String, String> environment = new HashMap<>();
         String[] args = term.stringValue().split("\001", -1);
         //for (String c : args) { System.out.println(c); }

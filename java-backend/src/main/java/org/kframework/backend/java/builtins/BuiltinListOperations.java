@@ -23,18 +23,22 @@ import java.util.stream.IntStream;
  */
 public class BuiltinListOperations {
 
-    public static Term constructor(Term list1, Term list2, TermContext context) {
+    public static Term constructor(Term[] terms, TermContext context) {
+        Term list1 = terms[0];
+        Term list2 = terms[1];
         if (list1.sort() != Sort.LIST || list2.sort() != Sort.LIST) {
             throw new IllegalArgumentException();
         }
         return BuiltinList.builder(context.global()).addAll(list1, list2).build();
     }
 
-    public static Term unit(TermContext context) {
+    public static Term unit(Term[] terms, TermContext context) {
         return BuiltinList.builder(context.global()).build();
     }
 
-    public static Term get(Term list, IntToken index, TermContext context) {
+    public static Term get(Term[] terms, TermContext context) {
+        Term list = terms[0];
+        IntToken index = (IntToken) terms[1];
         if (list instanceof BuiltinList) {
             try {
                 BuiltinList builtinList = (BuiltinList) list;
@@ -72,7 +76,9 @@ public class BuiltinListOperations {
         }
     }
 
-    public static BoolToken in(Term element, Term list, TermContext context) {
+    public static Term in(Term[] terms, TermContext context) {
+        Term element = terms[0];
+        Term list = terms[1];
         if (list instanceof BuiltinList) {
             BuiltinList builtinList = (BuiltinList) list;
             if (builtinList.contains(element)) {
@@ -98,7 +104,10 @@ public class BuiltinListOperations {
         }
     }
 
-    public static Term range(Term list, IntToken int1, IntToken int2, TermContext context) {
+    public static Term range(Term[] terms, TermContext context) {
+        Term list = terms[0];
+        IntToken int1 = (IntToken) terms[1];
+        IntToken int2 = (IntToken) terms[2];
         int removeLeft = int1.intValue();
         int removeRight = int2.intValue();
         if (removeLeft == 0 && removeRight == 0) {
@@ -137,7 +146,7 @@ public class BuiltinListOperations {
             }
 
             if (removeLeft == 1 && removeRight == 0 || removeLeft == 0 && removeRight == 1) {
-                return unit(context);
+                return unit(new Term[] {}, context);
             } else {
                 return Bottom.BOTTOM;
             }

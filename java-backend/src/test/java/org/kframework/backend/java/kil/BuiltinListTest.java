@@ -35,21 +35,21 @@ public class BuiltinListTest {
 
     @Test
     public void testListRange() throws Exception {
-        BuiltinList baseBuiltinList = (BuiltinList) BuiltinListOperations.range(
+        BuiltinList baseBuiltinList = (BuiltinList) BuiltinListOperations.range(new Term[] {
                 BuiltinList.builder(Sort.LIST, null, null, globalContext)
                         .addAll(IntToken.of(0), new Variable("L", Sort.LIST), IntToken.of(9), IntToken.of(10))
                         .build(),
                 IntToken.of(1),
-                IntToken.of(1),
+                IntToken.of(1)},
                 null);
 
-        BuiltinList builtinList = (BuiltinList) BuiltinListOperations.range(
+        BuiltinList builtinList = (BuiltinList) BuiltinListOperations.range(new Term[] {
                 BuiltinList.builder(Sort.LIST, null, null, globalContext)
                         .addAll(IntToken.of(0), IntToken.of(1))
                         .addAll(baseBuiltinList.children)
                         .addAll(IntToken.of(9), IntToken.of(10)).build(),
                 IntToken.of(2),
-                IntToken.of(1),
+                IntToken.of(1)},
                 null);
 
         Assert.assertEquals(builtinList.children, ImmutableList.of(new Variable("L", Sort.LIST), IntToken.of(9), IntToken.of(9)));

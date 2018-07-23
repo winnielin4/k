@@ -12,15 +12,20 @@ import org.kframework.backend.java.kil.TermContext;
  */
 public class BuiltinBoolOperations {
 
-    public static BoolToken not(BoolToken term, TermContext context) {
+    public static Term not(Term[] terms, TermContext context) {
+        BoolToken term = (BoolToken) terms[0];
         return BoolToken.of(!term.booleanValue());
     }
 
-    public static BoolToken and(BoolToken term1, BoolToken term2, TermContext context) {
+    public static Term and(Term[] terms, TermContext context) {
+        BoolToken term1 = (BoolToken) terms[0];
+        BoolToken term2 = (BoolToken) terms[1];
         return BoolToken.of(term1.booleanValue() && term2.booleanValue());
     }
 
-    public static Term andThen(Term term1, Term term2, TermContext context) {
+    public static Term andThen(Term[] terms, TermContext context) {
+        Term term1 = terms[0];
+        Term term2 = terms[1];
         if (term1 instanceof BoolToken) {
             BoolToken boolToken1 = (BoolToken) term1;
             return boolToken1.booleanValue() ? term2 : BoolToken.FALSE;
@@ -32,11 +37,15 @@ public class BuiltinBoolOperations {
         }
     }
 
-    public static BoolToken or(BoolToken term1, BoolToken term2, TermContext context) {
+    public static Term or(Term[] terms, TermContext context) {
+        BoolToken term1 = (BoolToken) terms[0];
+        BoolToken term2 = (BoolToken) terms[1];
         return BoolToken.of(term1.booleanValue() || term2.booleanValue());
     }
 
-    public static Term orElse(Term term1, Term term2, TermContext context) {
+    public static Term orElse(Term[] terms, TermContext context) {
+        Term term1 = terms[0];
+        Term term2 = terms[1];
         if (term1 instanceof BoolToken) {
             BoolToken boolToken1 = (BoolToken) term1;
             return boolToken1.booleanValue() ? BoolToken.TRUE : term2;
@@ -48,19 +57,27 @@ public class BuiltinBoolOperations {
         }
     }
 
-    public static BoolToken xor(BoolToken term1, BoolToken term2, TermContext context) {
+    public static Term xor(Term[] terms, TermContext context) {
+        BoolToken term1 = (BoolToken) terms[0];
+        BoolToken term2 = (BoolToken) terms[1];
         return BoolToken.of(term1.booleanValue() ^ term2.booleanValue());
     }
 
-    public static BoolToken implies(BoolToken term1, BoolToken term2, TermContext context) {
+    public static Term implies(Term[] terms, TermContext context) {
+        BoolToken term1 = (BoolToken) terms[0];
+        BoolToken term2 = (BoolToken) terms[1];
         return BoolToken.of(!term1.booleanValue() || term2.booleanValue());
     }
 
-    public static BoolToken eq(BoolToken term1, BoolToken term2, TermContext context) {
+    public static Term eq(Term[] terms, TermContext context) {
+        BoolToken term1 = (BoolToken) terms[0];
+        BoolToken term2 = (BoolToken) terms[1];
         return BoolToken.of(term1.booleanValue() == term2.booleanValue());
     }
 
-    public static BoolToken ne(BoolToken term1, BoolToken term2, TermContext context) {
+    public static Term ne(Term[] terms, TermContext context) {
+        BoolToken term1 = (BoolToken) terms[0];
+        BoolToken term2 = (BoolToken) terms[1];
         return BoolToken.of(term1.booleanValue() != term2.booleanValue());
     }
 

@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -106,10 +107,7 @@ public class KItem extends Term implements KItemRepresentation, HasGlobalContext
 
     private static Kind computeKind(Term kLabel) {
         if (kLabel instanceof KLabelConstant) {
-            org.kframework.kore.KLabel name = ((KLabelConstant) kLabel);
-            if (KLabels.DOTK.equals(name) || KLabels.KSEQ.equals(name)) {
-                return Kind.K;
-            }
+            return ((KLabelConstant)kLabel).kItemKind();
         }
         return Kind.KITEM;
     }
@@ -188,7 +186,7 @@ public class KItem extends Term implements KItemRepresentation, HasGlobalContext
                     .equals(BoolToken.TRUE)) {
                 sorts.add(rule.predicateSort());
             } else if (BoolToken.TRUE.equals(MetaK.unifiable(
-                    kList, rule.sortPredicateArgument().kList(), context))) {
+                    new Term[] {kList, rule.sortPredicateArgument().kList()}, context))) {
                 possibleSorts.add(rule.predicateSort());
             }
         }
@@ -272,12 +270,18 @@ public class KItem extends Term implements KItemRepresentation, HasGlobalContext
 
     public Term evaluateFunction(TermContext context) {
         Term result = global.kItemOps.evaluateFunction(this, context);
+        if (result.isEvaluated == null) {
+            result.isEvaluated = new HashSet<>();
+        }
         result.isEvaluated.add(context.getTopConstraint());
         return result;
     }
 
     public Term resolveFunctionAndAnywhere(TermContext context) {
         Term result = global.kItemOps.resolveFunctionAndAnywhere(this, context);
+        if (result.isEvaluated == null) {
+            result.isEvaluated = new HashSet<>();
+        }
         result.isEvaluated.add(context.getTopConstraint());
         return result;
     }
@@ -377,9 +381,7 @@ public class KItem extends Term implements KItemRepresentation, HasGlobalContext
                 return false;
             }
 
-            if (kLabelConstant.isSortPredicate()
-                    || !definition.functionRules().get(kLabelConstant).isEmpty()
-                    || builtins.get().isBuiltinKLabel(kLabelConstant)) {
+            if (kLabelConstant.isFunction()) {
                 kItem.evaluable = true;
             }
             return kItem.evaluable;
@@ -449,7 +451,7 @@ public class KItem extends Term implements KItemRepresentation, HasGlobalContext
                     Term owiseResult = null;
 
                     // an argument is concrete if it doesn't contain variables or unresolved functions
-                    boolean isConcrete = kList.getContents().stream().filter(elem -> !elem.isGround() || !elem.isNormal()).collect(Collectors.toList()).isEmpty();
+                    boolean isConcrete = kList.isConcrete();
                     for (Rule rule : definition.functionRules().get(kLabelConstant)) {
                         try {
                             if (rule == RuleAuditing.getAuditingRule()) {

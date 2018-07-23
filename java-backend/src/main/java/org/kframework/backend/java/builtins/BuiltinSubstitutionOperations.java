@@ -17,15 +17,23 @@ import java.util.Map;
  */
 public class BuiltinSubstitutionOperations {
 
-    public static Term userSubstitution(Term term, Term substitute, Term variable, TermContext context) {
+    public static Term userSubstitution(Term[] terms, TermContext context) {
+        Term term = terms[0];
+        Term substitute = terms[1];
+        Term variable = terms[2];
         return KLabelInjection.injectionOf(UserSubstitutionTransformer.userSubstitution(Collections.singletonMap(variable, substitute), term, context), context.global());
     }
 
-    public static Term userSingletonSubstitutionKore(Term term, Term substitute, Term variable, TermContext context) {
+    public static Term userSingletonSubstitutionKore(Term[] terms, TermContext context) {
+        Term term = terms[0];
+        Term substitute = terms[1];
+        Term variable = terms[2];
         return UserSubstitutionTransformer.userSubstitution(Collections.singletonMap(variable, substitute), term, context);
     }
 
-    public static Term userSubstitutionKore(Term term, BuiltinMap substitution, TermContext context) {
+    public static Term userSubstitutionKore(Term[] terms, TermContext context) {
+        Term term = terms[0];
+        BuiltinMap substitution = (BuiltinMap) terms[1];
         if (!substitution.isConcreteCollection()) {
             throw new IllegalArgumentException();
         }

@@ -41,7 +41,8 @@ public final class BuiltinCryptoOperations {
      *                       represents a Latin-1 encoded byte.
      * @return Output String (256 characters) such that each character represents an encoded Hex Value.
      */
-    public static StringToken keccak256(StringToken inputString, TermContext context) {
+    public static Term keccak256(Term[] terms, TermContext context) {
+        StringToken inputString = (StringToken) terms[0];
         byte[] bytes = StringUtils.getBytesIso8859_1(inputString.stringValue());
         Keccak.Digest256 keccakEngine = new Keccak.Digest256();
         byte[] digest = keccakEngine.digest(bytes);
@@ -56,7 +57,8 @@ public final class BuiltinCryptoOperations {
      *                       represents a Latin-1 encoded byte.
      * @return Output String (256 characters) such that each character represents an encoded Hex Value.
      */
-    public static StringToken sha3256(StringToken inputString, TermContext context) {
+    public static Term sha3256(Term[] terms, TermContext context) {
+        StringToken inputString = (StringToken) terms[0];
         byte[] bytes = StringUtils.getBytesIso8859_1(inputString.stringValue());
         SHA3.Digest256 sha3engine = new SHA3.Digest256();
         byte[] digest = sha3engine.digest(bytes);
@@ -71,7 +73,8 @@ public final class BuiltinCryptoOperations {
      *                       represents a Latin-1 encoded byte.
      * @return Output String (256 characters) such that each character represents an encoded Hex Value.
      */
-    public static StringToken sha256(StringToken inputString, TermContext context) {
+    public static Term sha256(Term[] terms, TermContext context) {
+        StringToken inputString = (StringToken) terms[0];
         byte[] bytes = StringUtils.getBytesIso8859_1(inputString.stringValue());
         SHA256.Digest sha2engine = new SHA256.Digest();
         byte[] digest = sha2engine.digest(bytes);
@@ -86,7 +89,8 @@ public final class BuiltinCryptoOperations {
      *                       represents a Latin-1 encoded byte.
      * @return Output String (256 characters) such that each character represents an encoded Hex Value.
      */
-    public static StringToken ripemd160(StringToken inputString, TermContext context) {
+    public static Term ripemd160(Term[] terms, TermContext context) {
+        StringToken inputString = (StringToken) terms[0];
         byte[] bytes = StringUtils.getBytesIso8859_1(inputString.stringValue());
         RIPEMD160.Digest ripemd160engine = new RIPEMD160.Digest();
         byte[] digest = ripemd160engine.digest(bytes);
@@ -103,7 +107,11 @@ public final class BuiltinCryptoOperations {
      * @return Output String (64 characters) in Latin-1 encoding representing the public key recovered upon success. Returns
      *         the empty string if key recovery fails due to invalid input.
      * */
-    public static StringToken ecdsaRecover(StringToken messageHash, IntToken v, StringToken r, StringToken s, TermContext context) {
+    public static Term ecdsaRecover(Term[] terms, TermContext context) {
+        StringToken messageHash = (StringToken) terms[0];
+        IntToken v = (IntToken) terms[1];
+        StringToken r = (StringToken) terms[2];
+        StringToken s = (StringToken) terms[3];
         byte[] hashBytes = StringUtils.getBytesIso8859_1(messageHash.stringValue());
         byte vByte = v.bigIntegerValue().byteValueExact();
         byte[] rBytes = StringUtils.getBytesIso8859_1(r.stringValue());
@@ -130,7 +138,9 @@ public final class BuiltinCryptoOperations {
         return KItem.of(G1_POINT_KLABEL, KList.concatenate(IntToken.of(x.v()), IntToken.of(y.v())), global);
     }
 
-    public static KItem bn128add(KItem point1, KItem point2, TermContext context) {
+    public static Term bn128add(Term[] terms, TermContext context) {
+        KItem point1 = (KItem) terms[0];
+        KItem point2 = (KItem) terms[1];
         BigInteger x1 = getCoord(point1, 0);
         BigInteger y1 = getCoord(point1, 1);
         BigInteger x2 = getCoord(point2, 0);
@@ -147,7 +157,9 @@ public final class BuiltinCryptoOperations {
         return mkPoint(res.x(), res.y(), context.global());
     }
 
-    public static KItem bn128mul(KItem point, IntToken scalar, TermContext context) {
+    public static Term bn128mul(Term[] terms, TermContext context) {
+        KItem point = (KItem) terms[0];
+        IntToken scalar = (IntToken) terms[1];
         BigInteger x = getCoord(point, 0);
         BigInteger y = getCoord(point, 1);
         if (x == null || y == null) {
@@ -161,7 +173,8 @@ public final class BuiltinCryptoOperations {
         return mkPoint(res.x(), res.y(), context.global());
     }
 
-    public static BoolToken bn128valid(KItem point, TermContext context) {
+    public static Term bn128valid(Term[] terms, TermContext context) {
+        KItem point = (KItem) terms[0];
         BigInteger x = getCoord(point, 0);
         BigInteger y = getCoord(point, 1);
         if (x == null || y == null) {
@@ -171,7 +184,8 @@ public final class BuiltinCryptoOperations {
         return BoolToken.of(p != null);
     }
 
-    public static BoolToken bn128g2valid(KItem point, TermContext context) {
+    public static Term bn128g2valid(Term[] terms, TermContext context) {
+        KItem point = (KItem) terms[0];
         BigInteger x1 = getCoord(point, 0);
         BigInteger x2 = getCoord(point, 1);
         BigInteger y1 = getCoord(point, 2);
@@ -183,7 +197,9 @@ public final class BuiltinCryptoOperations {
         return BoolToken.of(p != null);
     }
 
-    public static BoolToken bn128ate(BuiltinList g1, BuiltinList g2, TermContext context) {
+    public static Term bn128ate(Term[] terms, TermContext context) {
+        BuiltinList g1 = (BuiltinList) terms[0];
+        BuiltinList g2 = (BuiltinList) terms[1];
         if (!g1.isConcreteCollection() || !g2.isConcreteCollection() || g1.size() != g2.size()) {
             return null;
         }

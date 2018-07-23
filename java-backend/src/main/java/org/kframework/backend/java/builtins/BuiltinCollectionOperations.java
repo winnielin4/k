@@ -2,6 +2,7 @@
 package org.kframework.backend.java.builtins;
 
 import org.kframework.backend.java.kil.Collection;
+import org.kframework.backend.java.kil.Term;
 import org.kframework.backend.java.kil.TermContext;
 
 
@@ -12,7 +13,8 @@ import org.kframework.backend.java.kil.TermContext;
  */
 public final class BuiltinCollectionOperations {
 
-    public static IntToken size(Collection collection, TermContext context) {
+    public static Term size(Term[] terms, TermContext context) {
+        Collection collection = (Collection) terms[0];
         return collection.isConcreteCollection() ? IntToken.of(collection.concreteSize()) : null;
     }
 

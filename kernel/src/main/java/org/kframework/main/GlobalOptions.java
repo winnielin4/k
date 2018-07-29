@@ -131,5 +131,13 @@ public final class GlobalOptions {
                     "Only for kevm.")
     public boolean optimizeZ3Axioms = false;
 
+    @Parameter(names="--debug-z3",
+            description="Log formulae fed to z3 together with the rule that triggered them.")
+    public boolean debugZ3 = false;
+
+    @Parameter(names="--debug-z3-queries",
+            description="Log actual z3 queries. Activates --debug-z3 automatically.")
+    public boolean debugZ3Queries = false;
+
     public boolean logRulesPublic = false;
 }

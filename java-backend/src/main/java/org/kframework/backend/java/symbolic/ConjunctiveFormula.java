@@ -30,6 +30,8 @@ import org.kframework.backend.java.kil.Term;
 import org.kframework.backend.java.kil.TermContext;
 import org.kframework.backend.java.kil.Variable;
 import org.kframework.backend.java.util.Constants;
+import org.kframework.backend.java.util.CounterStopwatch;
+import org.kframework.backend.java.util.FormulaContext;
 import org.kframework.backend.java.util.RewriteEngineUtils;
 import org.kframework.builtin.KLabels;
 
@@ -754,10 +756,10 @@ public class ConjunctiveFormula extends Term implements CollectionInternalRepres
          */
 
         constraint = (ConjunctiveFormula) constraint.substitute(this.substitution());
-        return implies(constraint, Collections.emptySet());
+        return implies(constraint, Collections.emptySet(), new FormulaContext(FormulaContext.Kind.EquivChecker, null));
     }
 
-    public boolean implies(ConjunctiveFormula constraint, Set<Variable> rightOnlyVariables) {
+    public boolean implies(ConjunctiveFormula constraint, Set<Variable> rightOnlyVariables, FormulaContext formulaContext) {
         // TODO(AndreiS): this can prove "stuff -> false", it needs fixing
         assert !constraint.isFalseExtended();
 
@@ -800,7 +802,7 @@ public class ConjunctiveFormula extends Term implements CollectionInternalRepres
                 continue;
             }
 
-            if (!impliesSMT(left, right, rightOnlyVariables)) {
+            if (!impliesSMT(left, right, rightOnlyVariables, formulaContext)) {
                 if (global.globalOptions.debug) {
                     System.err.println("Failure!");
                 }
@@ -854,15 +856,32 @@ public class ConjunctiveFormula extends Term implements CollectionInternalRepres
 
     private static final Map<Triple<ConjunctiveFormula, ConjunctiveFormula, Set<Variable>>, Boolean> impliesSMTCache = Collections.synchronizedMap(new HashMap<>());
 
+    public static CounterStopwatch impliesStopwatch = new CounterStopwatch("impliesSMT");
+
     private static boolean impliesSMT(
             ConjunctiveFormula left,
             ConjunctiveFormula right,
-            Set<Variable> rightOnlyVariables) {
-        Triple<ConjunctiveFormula, ConjunctiveFormula, Set<Variable>> triple = Triple.of(left, right, rightOnlyVariables);
-        if (!impliesSMTCache.containsKey(triple)) {
-            impliesSMTCache.put(triple, left.global.constraintOps.impliesSMT(left, right, rightOnlyVariables));
+            Set<Variable> rightOnlyVariables,
+            FormulaContext formulaContext) {
+        impliesStopwatch.start();
+        formulaContext.z3Profiler.newRequest();
+        try {
+            Triple<ConjunctiveFormula, ConjunctiveFormula, Set<Variable>> triple = Triple.of(left, right, rightOnlyVariables);
+            boolean cached = true;
+            if (!impliesSMTCache.containsKey(triple)) {
+                impliesSMTCache.put(triple,
+                        left.global.constraintOps.impliesSMT(left, right, rightOnlyVariables, formulaContext));
+                cached = false;
+            }
+            Boolean result = impliesSMTCache.get(triple);
+
+            if (left.globalContext().globalOptions.debugZ3) {
+                formulaContext.printImplication(left, right, result, cached);
+            }
+            return result;
+        } finally {
+            impliesStopwatch.stop();
         }
-        return impliesSMTCache.get(triple);
     }
 
     public boolean hasMapEqualities() {

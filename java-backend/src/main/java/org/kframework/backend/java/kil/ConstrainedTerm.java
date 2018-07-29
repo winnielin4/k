@@ -16,12 +16,12 @@ import org.kframework.backend.java.symbolic.PersistentUniqueList;
 import org.kframework.backend.java.symbolic.Transformer;
 import org.kframework.backend.java.symbolic.Visitor;
 import org.kframework.backend.java.util.Constants;
-import org.kframework.kil.ASTNode;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
+import org.kframework.backend.java.util.FormulaContext;
 import org.kframework.kprove.KProve;
 
 
@@ -97,8 +97,9 @@ public class ConstrainedTerm extends JavaSymbolicObject {
         return data.constraint;
     }
 
-    public boolean implies(ConstrainedTerm constrainedTerm) {
-        ConjunctiveFormula conjunctiveFormula = matchImplies(constrainedTerm, true, true);
+    public boolean implies(ConstrainedTerm constrainedTerm, Rule specRule) {
+        ConjunctiveFormula conjunctiveFormula = matchImplies(constrainedTerm, true, true,
+                new FormulaContext(FormulaContext.Kind.FinalImplication, specRule));
         return conjunctiveFormula != null;
     }
 
@@ -127,7 +128,8 @@ public class ConstrainedTerm extends JavaSymbolicObject {
      * occurring only in the given constrained term (but not in this constrained term) are
      * existentially quantified.
      */
-    public ConjunctiveFormula matchImplies(ConstrainedTerm constrainedTerm, boolean expand, boolean finalImplication) {
+    public ConjunctiveFormula matchImplies(ConstrainedTerm constrainedTerm, boolean expand, boolean finalImplication,
+                                           FormulaContext formulaContext) {
         ConjunctiveFormula constraint = ConjunctiveFormula.of(constrainedTerm.termContext().global())
                 .add(data.constraint.substitution())
                 .add(data.term, constrainedTerm.data.term)
@@ -184,14 +186,7 @@ public class ConstrainedTerm extends JavaSymbolicObject {
         ConjunctiveFormula rightHandSide = constraint.removeBindings(rightOnlyVariables);
         rightHandSide = (ConjunctiveFormula) rightHandSide.substituteAndEvaluate(leftHandSide.substitution(), context);
 
-        if (KProve.options.global.logBasic && finalImplication) {
-            System.err.println("\nStart: proving final implication:\n================= \n\t"
-                    + leftHandSide + "\n  implies \n\t" + rightHandSide);
-        }
-        boolean implicationResult = leftHandSide.implies(rightHandSide, rightOnlyVariables);
-        if (KProve.options.global.logBasic && finalImplication) {
-            System.err.println("\nEnd: proving final implication\n================= \n");
-        }
+        boolean implicationResult = leftHandSide.implies(rightHandSide, rightOnlyVariables, formulaContext);
         if (!implicationResult) {
             return null;
         }
@@ -211,7 +206,7 @@ public class ConstrainedTerm extends JavaSymbolicObject {
      */
     public List<Triple<ConjunctiveFormula, Boolean, Map<scala.collection.immutable.List<Pair<Integer, Integer>>, Term>>> unify(
             ConstrainedTerm constrainedTerm,
-            Set<Variable> variables) {
+            Set<Variable> variables, FormulaContext formulaContext) {
         /* unify the subject term and the pattern term without considering those associated constraints */
         ConjunctiveFormula unificationConstraint = FastRuleMatcher.unify(term(), constrainedTerm.term(), context);
         if (unificationConstraint.isFalse()) {
@@ -227,7 +222,7 @@ public class ConstrainedTerm extends JavaSymbolicObject {
                 constraint(),
                 constrainedTerm.constraint(),
                 variables == null ? constrainedTerm.variableSet() : variables,
-                context);
+                context, formulaContext);
     }
 
     public static List<Triple<ConjunctiveFormula, Boolean, Map<scala.collection.immutable.List<Pair<Integer, Integer>>, Term>>> evaluateConstraints(
@@ -235,7 +230,7 @@ public class ConstrainedTerm extends JavaSymbolicObject {
             ConjunctiveFormula subjectConstraint,
             ConjunctiveFormula patternConstraint,
             Set<Variable> variables,
-            TermContext context) {
+            TermContext context, FormulaContext formulaContext) {
         context.setTopConstraint(subjectConstraint);
         List<ConjunctiveFormula> candidates = constraint.getDisjunctiveNormalForm().conjunctions().stream()
                 .map(c -> c.addAndSimplify(patternConstraint, context))
@@ -284,7 +279,8 @@ public class ConstrainedTerm extends JavaSymbolicObject {
             assert solution.disjunctions().isEmpty();
             if (candidate.substitution().keySet().equals(variables)
                     && !candidate.isSubstitution()
-                    && subjectConstraint.implies(ConjunctiveFormula.of(context.global()).addAll(candidateConstraint.equalities()), Sets.newHashSet())) {
+                    && subjectConstraint.implies(ConjunctiveFormula.of(context.global())
+                    .addAll(candidateConstraint.equalities()), Sets.newHashSet(), formulaContext)) {
                 context.setTopConstraint(null);
                 solutions.add(Triple.of(
                         subjectConstraint

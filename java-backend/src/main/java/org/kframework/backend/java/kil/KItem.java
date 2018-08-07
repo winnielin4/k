@@ -24,7 +24,6 @@ import org.kframework.backend.java.util.Subsorts;
 import org.kframework.backend.java.utils.BitSet;
 import org.kframework.builtin.KLabels;
 import org.kframework.kil.Attribute;
-import org.kframework.kprove.KProve;
 import org.kframework.main.GlobalOptions;
 import org.kframework.utils.errorsystem.KEMException;
 import org.kframework.utils.errorsystem.KException.ExceptionType;
@@ -553,7 +552,7 @@ public class KItem extends Term implements KItemRepresentation, HasGlobalContext
                                 result = rightHandSide;
                             }
 
-                            if (KProve.options.global.logRulesPublic && result != null) {
+                            if (context.global().globalOptions.logRulesPublic && result != null) {
                                 System.err.println("\n" + rule);
                             }
 

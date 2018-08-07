@@ -29,7 +29,6 @@ import org.kframework.backend.java.kil.Variable;
 import org.kframework.builtin.Sorts;
 import org.kframework.kil.Attribute;
 import org.kframework.kore.KORE;
-import org.kframework.kprove.KProve;
 import org.kframework.krun.KRunOptions;
 
 import java.math.BigInteger;
@@ -202,7 +201,7 @@ public class    KILtoSMTLib extends CopyOnWriteTransformer {
         StringBuilder sb = new StringBuilder(1024);
         leftTransformer.appendSortAndFunctionDeclarations(
                 sb, Sets.union(leftTransformer.variables(), rightTransformer.variables()));
-        if (!KProve.options.global.optimizeZ3Axioms
+        if (!leftHandSide.globalContext().globalOptions.optimizeZ3Axioms
                 || rightExpression.contains("chop") || rightExpression.contains("sizeWordStackAux"))
             leftTransformer.appendAxioms(sb);
         leftTransformer.appendConstantDeclarations(sb,

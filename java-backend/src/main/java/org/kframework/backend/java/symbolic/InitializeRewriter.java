@@ -171,6 +171,7 @@ public class InitializeRewriter implements Function<Module, Rewriter> {
                 rewritingContext.profiler.logInitTime();
             }
             rewritingContext.setExecutionPhase(true);
+            rewritingContext.globalOptions.logRulesPublic = rewritingContext.globalOptions.logRules;
             RewriterResult result = rewriter.rewrite(new ConstrainedTerm(backendKil, termContext), depth.orElse(-1));
             return result;
         }

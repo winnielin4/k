@@ -21,6 +21,7 @@ import org.kframework.backend.java.util.ImpureFunctionException;
 import org.kframework.backend.java.util.Profiler;
 import org.kframework.backend.java.util.Profiler2;
 import org.kframework.backend.java.util.RewriteEngineUtils;
+import org.kframework.backend.java.util.RuleSourceUtil;
 import org.kframework.backend.java.util.Subsorts;
 import org.kframework.backend.java.utils.BitSet;
 import org.kframework.builtin.KLabels;
@@ -579,7 +580,7 @@ public class KItem extends Term implements KItemRepresentation, HasGlobalContext
                             }
 
                             if (context.global().globalOptions.logRulesPublic && result != null) {
-                                System.err.println("\n" + rule);
+                                RuleSourceUtil.printRuleAndSource(rule);
                             }
 
                             /*
@@ -701,7 +702,7 @@ public class KItem extends Term implements KItemRepresentation, HasGlobalContext
                 rightHandSide = rightHandSide.substituteAndEvaluate(solution, context);
 
                 if (global.globalOptions.logRulesPublic) {
-                    System.err.println("\n" + rule);
+                    RuleSourceUtil.printRuleAndSource(rule);
                 }
                 return rightHandSide;
             } finally {

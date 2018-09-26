@@ -47,7 +47,7 @@ public class SMTOperations {
             constraint.globalContext().profiler.queryBuildTimer.start();
             CharSequence query;
             try {
-                query = KILtoSMTLib.translateConstraint(constraint);
+                query = KILtoSMTLib.translateConstraint(constraint).toString();
             } finally {
                 constraint.globalContext().profiler.queryBuildTimer.stop();
             }
@@ -78,10 +78,11 @@ public class SMTOperations {
             Set<Variable> rightOnlyVariables, FormulaContext formulaContext) {
         if (smtOptions.smt == SMTSolver.Z3) {
             try {
+                //From this point on, will be converted to toString() anyway.
                 left.globalContext().profiler.queryBuildTimer.start();
                 CharSequence query;
                 try {
-                    query = KILtoSMTLib.translateImplication(left, right, rightOnlyVariables);
+                    query = KILtoSMTLib.translateImplication(left, right, rightOnlyVariables).toString();
                 } finally {
                     left.globalContext().profiler.queryBuildTimer.stop();
                 }

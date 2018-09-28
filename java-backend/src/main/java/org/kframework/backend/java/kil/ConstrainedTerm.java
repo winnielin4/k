@@ -98,7 +98,7 @@ public class ConstrainedTerm extends JavaSymbolicObject {
 
     public boolean implies(ConstrainedTerm constrainedTerm, Rule specRule, boolean logFailures) {
         ConjunctiveFormula conjunctiveFormula = matchImplies(constrainedTerm, true, logFailures,
-                new FormulaContext(FormulaContext.Kind.FinalImplication, specRule));
+                new FormulaContext(FormulaContext.Kind.FinalImplication, specRule), null);
         return conjunctiveFormula != null;
     }
 
@@ -140,7 +140,7 @@ public class ConstrainedTerm extends JavaSymbolicObject {
      * existentially quantified.
      */
     public ConjunctiveFormula matchImplies(ConstrainedTerm constrainedTerm, boolean expand, boolean logFailures,
-                                           FormulaContext formulaContext) {
+                                           FormulaContext formulaContext, Set<String> matchingSymbols) {
         ConjunctiveFormula constraint = ConjunctiveFormula.of(constrainedTerm.termContext().global())
                 .add(data.constraint.substitution())
                 .add(data.term, constrainedTerm.data.term)
@@ -152,6 +152,13 @@ public class ConstrainedTerm extends JavaSymbolicObject {
         constraint = constraint.applyProjectionLemma();
         if (constraint.isFalse()) {
             return null;
+        }
+
+        if (matchingSymbols != null) {
+            constraint = constraint.resolveMatchingSymbols(matchingSymbols);
+            if (constraint.isFalse()) {
+                return null;
+            }
         }
 
         /* apply pattern folding */

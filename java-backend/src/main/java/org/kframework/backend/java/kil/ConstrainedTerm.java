@@ -123,6 +123,18 @@ public class ConstrainedTerm extends JavaSymbolicObject {
     }
 
     /**
+     * Checks that this term matches the term part of constrainedTerm modulo substitutions only. The constraint
+     * matching is not checked.
+     */
+    public boolean matchesTermModuloSubstitutions(ConstrainedTerm constrainedTerm) {
+        ConjunctiveFormula constraint = ConjunctiveFormula.of(constrainedTerm.termContext().global())
+                .add(data.constraint.substitution())
+                .add(data.term, constrainedTerm.data.term)
+                .simplifyBeforePatternFolding(context);
+        return !constraint.isFalseExtended();
+    }
+
+    /**
      * Checks if this constrained term implies the given constrained term, assuming the variables
      * occurring only in the given constrained term (but not in this constrained term) are
      * existentially quantified.

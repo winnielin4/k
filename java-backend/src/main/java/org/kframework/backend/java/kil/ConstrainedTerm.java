@@ -130,7 +130,7 @@ public class ConstrainedTerm extends JavaSymbolicObject {
         ConjunctiveFormula constraint = ConjunctiveFormula.of(constrainedTerm.termContext().global())
                 .add(data.constraint.substitution())
                 .add(data.term, constrainedTerm.data.term)
-                .simplifyBeforePatternFolding(context);
+                .simplifyBeforePatternFolding(context, false);
         return !constraint.isFalseExtended();
     }
 
@@ -144,7 +144,7 @@ public class ConstrainedTerm extends JavaSymbolicObject {
         ConjunctiveFormula constraint = ConjunctiveFormula.of(constrainedTerm.termContext().global())
                 .add(data.constraint.substitution())
                 .add(data.term, constrainedTerm.data.term)
-                .simplifyBeforePatternFolding(context);
+                .simplifyBeforePatternFolding(context, finalImplication);
         if (constraint.isFalseExtended()) {
             return null;
         }

@@ -231,6 +231,8 @@ public class    KILtoSMTLib extends CopyOnWriteTransformer {
 
     private final KRunOptions krunOptions;
 
+    private final GlobalContext global;
+
     /**
      * Flag set to true if it is sounds to skip equalities that cannot be translated.
      */
@@ -240,12 +242,13 @@ public class    KILtoSMTLib extends CopyOnWriteTransformer {
     private final HashMap<UninterpretedToken, Integer> tokenEncoding;
 
     public KILtoSMTLib(boolean skipEqualities, GlobalContext global) {
-        this(skipEqualities, global.getDefinition(), global.krunOptions);
+        this(skipEqualities, global.getDefinition(), global.krunOptions, global);
     }
 
-    private KILtoSMTLib(boolean skipEqualities, Definition definition, KRunOptions krunOptions) {
+    private KILtoSMTLib(boolean skipEqualities, Definition definition, KRunOptions krunOptions, GlobalContext global) {
         this.definition = definition;
         this.krunOptions = krunOptions;
+        this.global = global;
         this.skipEqualities = skipEqualities;
         variables = new HashSet<>();
         tokenEncoding = new HashMap<>();
@@ -310,7 +313,7 @@ public class    KILtoSMTLib extends CopyOnWriteTransformer {
         for (Rule rule : definition.functionRules().values()) {
             if (rule.att().contains(Attribute.SMT_LEMMA_KEY)) {
                 try {
-                    KILtoSMTLib kil2SMT = new KILtoSMTLib(false, definition, krunOptions);
+                    KILtoSMTLib kil2SMT = new KILtoSMTLib(false, definition, krunOptions, global);
                     CharSequence leftExpression = kil2SMT.translate(rule.leftHandSide()).expression();
                     CharSequence rightExpression = kil2SMT.translate(rule.rightHandSide()).expression();
                     sb.append("(assert ");
@@ -341,7 +344,7 @@ public class    KILtoSMTLib extends CopyOnWriteTransformer {
     private CharSequence appendConstantDeclarations(StringBuilder sb, Set<Variable> variables) {
         for (Variable variable : variables) {
             sb.append("(declare-fun ");
-            sb.append("|").append(variable.name()).append("|");
+            sb.append("|").append(variable.longName()).append("|");
             sb.append(" () ");
             String sortName;
             sortName = getSortName(variable);
@@ -354,7 +357,7 @@ public class    KILtoSMTLib extends CopyOnWriteTransformer {
     private CharSequence appendQuantifiedVariables(StringBuilder sb, Set<Variable> variables) {
         for (Variable variable : variables) {
             sb.append("(");
-            sb.append("|").append(variable.name()).append("|");
+            sb.append("|").append(variable.longName()).append("|");
             sb.append(" ");
             String sortName;
             sortName = getSortName(variable);
@@ -455,8 +458,11 @@ public class    KILtoSMTLib extends CopyOnWriteTransformer {
                 if (variable == null) {
                     variable = Variable.getAnonVariable(term.sort());
                     termAbstractionMap.put(term, variable);
+                    if (global.globalOptions.debugZ3Queries) {
+                        System.err.format("\t%s ::= %s\n", variable.longName(), term);
+                    }
                 }
-                return variable.name();
+                return variable.longName();
             } else {
                 throw e;
             }
@@ -536,7 +542,7 @@ public class    KILtoSMTLib extends CopyOnWriteTransformer {
         switch (label) {
             case "exists":
                 Variable variable = (Variable) kList.get(0);
-                label = "exists ((" + variable.name() + " " + variable.sort() + ")) ";
+                label = "exists ((" + variable.longName() + " " + variable.sort() + ")) ";
                 arguments = ImmutableList.of(kList.get(1));
                 break;
             case "extract":
@@ -618,7 +624,7 @@ public class    KILtoSMTLib extends CopyOnWriteTransformer {
     @Override
     public JavaSymbolicObject<Term> transform(Variable variable) {
         variables.add(variable);
-        return new SMTLibTerm("|" + variable.name() + "|");
+        return new SMTLibTerm("|" + variable.longName() + "|");
     }
 
 }

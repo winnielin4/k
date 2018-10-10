@@ -59,6 +59,9 @@ public class    KILtoSMTLib extends CopyOnWriteTransformer {
     public static final ImmutableSet<String> SMTLIB_BUILTIN_FUNCTIONS = ImmutableSet.of(
             "forall",
             "exists",
+            /* array theory */
+            "select",
+            "store",
             /* core theory */
             "not",
             "and",
@@ -282,7 +285,7 @@ public class    KILtoSMTLib extends CopyOnWriteTransformer {
             sorts.add(renameSort(variable.sort()));
         }
 
-        for (Sort sort : Sets.difference(sorts, SMTLIB_BUILTIN_SORTS)) {
+        for (Sort sort : Sets.difference(sorts, Sets.union(SMTLIB_BUILTIN_SORTS, definition.smtPreludeSorts()))) {
             if (sort.equals(Sort.MAP) && krunOptions.experimental.smt.mapAsIntArray) {
                 sb.append("(define-sort Map () (Array Int Int))");
             } else {

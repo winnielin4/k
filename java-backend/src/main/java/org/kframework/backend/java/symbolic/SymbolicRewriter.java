@@ -605,6 +605,7 @@ public class SymbolicRewriter {
             Rule rule, ConstrainedTerm initialTerm,
             ConstrainedTerm targetTerm,
             List<Rule> specRules, KExceptionManager kem) {
+        List<ConstrainedTerm> provedTerms = new ArrayList<>();
         List<ConstrainedTerm> proofResults = new ArrayList<>();
         int successPaths = 0;
         Set<ConstrainedTerm> visited = new HashSet<>();
@@ -665,6 +666,7 @@ public class SymbolicRewriter {
                             logStep(step, v, targetCallData, term, true, alreadyLogged);
                             System.out.println("\n============\nStep " + step + ": eliminated!\n============\n");
                         }
+                        provedTerms.add(term);
                         successPaths++;
                         continue;
                     } else if (!initKEqualsTargetK) {
@@ -809,7 +811,25 @@ public class SymbolicRewriter {
             global.globalOptions.log = oldLogEnabled;
         }
 
-        for (ConstrainedTerm term : proofResults) {
+        System.out.format("PROVED %d TERMS:\n==================================\n", provedTerms.size());
+        printConstrainedTerms(provedTerms);
+
+
+        System.out.format("FAILED %d TERMS:\n==================================\n", proofResults.size());
+        printConstrainedTerms(proofResults);
+
+        if (proofResults.isEmpty()) {
+            System.out.println(KLabels.ML_TRUE);
+        }
+
+        if (global.globalOptions.verbose) {
+            printSummaryBox(rule, proofResults, successPaths, step);
+        }
+        return proofResults;
+    }
+
+    private void printConstrainedTerms(List<ConstrainedTerm> constrainedTerms) {
+        for (ConstrainedTerm term : constrainedTerms) {
             if (global.globalOptions.fast) {
                 System.out.println(term);
             } else {
@@ -821,14 +841,6 @@ public class SymbolicRewriter {
             System.out.println(term.constraint().toString().replaceAll("#And", "\n#And"));
             System.out.println();
         }
-        if (proofResults.isEmpty()) {
-            System.out.println(KLabels.ML_TRUE);
-        }
-
-        if (global.globalOptions.verbose) {
-            printSummaryBox(rule, proofResults, successPaths, step);
-        }
-        return proofResults;
     }
 
     private void printSummaryBox(Rule rule, List<ConstrainedTerm> proofResults, int successPaths, int step) {

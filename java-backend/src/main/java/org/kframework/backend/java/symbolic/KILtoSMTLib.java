@@ -477,7 +477,7 @@ public class    KILtoSMTLib extends CopyOnWriteTransformer {
             if (allowNewVars) {
                 variable = Variable.getAnonVariable(term.sort());
                 termAbstractionMap.put(term, variable);
-                if (globalContext.globalOptions.debugZ3Queries) {
+                if (globalContext.javaExecutionOptions.debugZ3Queries) {
                     System.err.format("\t%s ::= %s\n", variable.longName(), term);
                 }
             } else {

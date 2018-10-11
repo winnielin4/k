@@ -632,6 +632,8 @@ public class SymbolicRewriter {
             nextStepLogEnabled = false;
 
             for (ConstrainedTerm term : queue) {
+                try { //not formatting to minimize git merge conflicts.
+
                 v++;
                 ConstrainedTerm termK = new ConstrainedTerm(getCell((KItem) term.term(), "<k>"),
                         term.constraint(), term.termContext());
@@ -774,6 +776,15 @@ public class SymbolicRewriter {
                     }
                 }
                 global.javaExecutionOptions.debugZ3 = oldDebug;
+
+                } catch (RuntimeException e) {
+                    System.err.println("\n" +
+                            "==========================================\n" +
+                            "Top term when exception was thrown:\n" +
+                            "==========================================\n");
+                    printTermAndConstraint(term);
+                    throw e;
+                }
             }
 
             /* swap the queues */
@@ -788,14 +799,7 @@ public class SymbolicRewriter {
         }
 
         for (ConstrainedTerm term : proofResults) {
-            print(term.term(), prettyResult);
-            System.out.print("/\\");
-            if (prettyResult) {
-                global.getPrettyPrinter().prettyPrint(term.constraint());
-            } else {
-                System.out.println(term.constraint().toStringMultiline());
-            }
-            System.out.println();
+            printTermAndConstraint(term);
         }
         if (proofResults.isEmpty()) {
             System.out.println(KLabels.ML_TRUE);
@@ -805,6 +809,17 @@ public class SymbolicRewriter {
             printSummaryBox(rule, proofResults, successPaths, step);
         }
         return proofResults;
+    }
+
+    public void printTermAndConstraint(ConstrainedTerm term) {
+        print(term.term(), prettyResult);
+        System.out.print("/\\");
+        if (prettyResult) {
+            global.getPrettyPrinter().prettyPrint(term.constraint());
+        } else {
+            System.out.println(term.constraint().toStringMultiline());
+        }
+        System.out.println();
     }
 
     private void printSummaryBox(Rule rule, List<ConstrainedTerm> proofResults, int successPaths, int step) {

@@ -617,7 +617,7 @@ public class SymbolicRewriter {
         //to avoid printing initialization-phase rules
         global.javaExecutionOptions.logRulesPublic = global.javaExecutionOptions.logRules;
 
-        if (global.javaExecutionOptions.log) {
+        if (global.javaExecutionOptions.logTarget) {
             System.out.println("\nTarget term\n=====================\n");
             System.out.println(targetTerm);
         }

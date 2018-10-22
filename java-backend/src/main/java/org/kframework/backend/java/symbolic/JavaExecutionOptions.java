@@ -116,6 +116,9 @@ public final class JavaExecutionOptions {
 
     public boolean logRulesPublic = false;
 
+    @Parameter(names="--log-target", description="Log target term.")
+    public boolean logTarget = false;
+
     public static class LogEventConverter extends BaseEnumConverter<StateLog.LogEvent> {
 
         public LogEventConverter(String optionName) {

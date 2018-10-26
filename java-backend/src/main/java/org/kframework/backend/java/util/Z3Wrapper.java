@@ -41,7 +41,8 @@ public class Z3Wrapper {
         this.globalOptions = globalOptions;
         this.files = files;
 
-        String defaultPrelude = "(set-option :auto-config false)\n(set-option :smt.mbqi false)\n";
+        String defaultPrelude = "(set-option :auto-config false)\n"
+                              + "(set-option :smt.mbqi false)\n";
 
         SMT_PRELUDE = options.smtPrelude == null ? defaultPrelude : files.loadFromWorkingDirectory(options.smtPrelude);
         CHECK_SAT = options.z3Tactic == null ? "(check-sat)" : "(check-sat-using " + options.z3Tactic + ")";

@@ -587,6 +587,7 @@ public class SymbolicRewriter {
             ConstrainedTerm targetTerm,
             List<Rule> specRules, KExceptionManager kem) {
         List<ConstrainedTerm> proofResults = new ArrayList<>();
+        List<ConstrainedTerm> successResults = new ArrayList<>();
         int successPaths = 0;
         Set<ConstrainedTerm> visited = new HashSet<>();
         List<ConstrainedTerm> queue = new ArrayList<>();
@@ -603,6 +604,7 @@ public class SymbolicRewriter {
             for (ConstrainedTerm term : queue) {
                 if (term.implies(targetTerm)) {
                     successPaths++;
+                    successResults.add(term);
                     continue;
                 }
 
@@ -688,6 +690,9 @@ public class SymbolicRewriter {
             guarded = true;
         }
 
+        for (ConstrainedTerm c : successResults) {
+            System.out.println(c.toString());
+        }
         if (global.globalOptions.verbose) {
             printSummaryBox(rule, proofResults, successPaths, step);
         }

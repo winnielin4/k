@@ -777,7 +777,7 @@ public class SymbolicRewriter {
                 }
                 global.javaExecutionOptions.debugZ3 = oldDebug;
 
-                } catch (RuntimeException e) {
+                } catch (RuntimeException | Error e) {
                     System.err.println("\n" +
                             "==========================================\n" +
                             "Top term when exception was thrown:\n" +

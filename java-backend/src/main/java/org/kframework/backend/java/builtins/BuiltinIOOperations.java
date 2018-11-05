@@ -1,11 +1,8 @@
 // Copyright (c) 2013-2019 K Team. All Rights Reserved.
 package org.kframework.backend.java.builtins;
 
+import org.kframework.attributes.Source;
 import org.kframework.backend.java.kil.*;
-import org.kframework.definition.Configuration;
-import org.kframework.definition.Definition;
-import org.kframework.definition.Rule;
-import org.kframework.kore.K;
 import org.kframework.kore.KORE;
 import org.kframework.kore.KToken;
 import org.kframework.kore.TransformK;
@@ -13,13 +10,13 @@ import org.kframework.krun.RunProcess;
 import org.kframework.krun.RunProcess.ProcessOutput;
 import org.kframework.krun.api.io.FileSystem;
 import org.kframework.parser.kore.KoreParser;
-import org.kframework.utils.StringUtil;
+import org.kframework.utils.errorsystem.KException;
+import org.kframework.utils.errorsystem.ParseFailedException;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.CharacterCodingException;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static org.kframework.Collections.stream;
 
@@ -112,29 +109,21 @@ public class BuiltinIOOperations {
 
     /**
      * Execute path and gives input as an argument.
-     * No whitespaces allowed in path.
-     * Example `cat file` or `echo string` or any external parser.
-     * Expects KAST format.
+     * Example `cat file` or `echo string` or whatever external parser.
      */
-    public static Term parseString(StringToken path, Token input, TermContext termContext) {
+    public static Term parse(StringToken path, StringToken input, TermContext termContext) {
         List<String> tokens = new ArrayList<>(Arrays.asList(path.stringValue().split(" ")));
-        String tempF = "tempRuntimeParser.txt";
-        termContext.global().files.saveToTemp(tempF, input.s());
-        tokens.add(termContext.global().files.resolveTemp(tempF).getAbsolutePath());
+        tokens.add(input.stringValue());
         Map<String, String> environment = new HashMap<>();
         RunProcess.ProcessOutput output = RunProcess.execute(environment, new ProcessBuilder().directory(new File(".")), tokens.toArray(new String[tokens.size()]));
 
         if (output.exitCode != 0) {
-            return termContext.getKOREtoBackendKILConverter().convert(KoreParser.parse(
-                    "parseError(" +
-                            "#token(" + StringUtil.enquoteCString(input.s()) + ", \"Input\"), " +
-                            "#token(" + StringUtil.enquoteCString(new String(output.stdout)) + ", \"Stdout\"), " +
-                            "#token(" + StringUtil.enquoteCString(new String(output.stderr)) + ", \"Stderr\"))"
-            , termContext.getSource()));
+            throw new ParseFailedException(new KException(KException.ExceptionType.ERROR, KException.KExceptionGroup.CRITICAL, "Parser returned a non-zero exit code: "
+                    + output.exitCode + "\nStdout:\n" + new String(output.stdout) + "\nStderr:\n" + new String(output.stderr)));
         }
 
         byte[] kast = output.stdout != null ? output.stdout : new byte[0];
-        return termContext.getKOREtoBackendKILConverter().convert(KoreParser.parse(new String(kast), termContext.getSource()));
+        return termContext.getKOREtoBackendKILConverter().convert(KoreParser.parse(new String(kast), Source.apply("")));
     }
 
     /**

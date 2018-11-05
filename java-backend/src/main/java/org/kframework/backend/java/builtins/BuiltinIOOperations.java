@@ -1,21 +1,20 @@
 // Copyright (c) 2013-2019 K Team. All Rights Reserved.
 package org.kframework.backend.java.builtins;
 
-import org.kframework.backend.java.kil.BuiltinList;
-import org.kframework.backend.java.kil.KItem;
-import org.kframework.backend.java.kil.KLabelConstant;
-import org.kframework.backend.java.kil.KList;
-import org.kframework.backend.java.kil.Term;
-import org.kframework.backend.java.kil.TermContext;
+import org.kframework.attributes.Source;
+import org.kframework.backend.java.kil.*;
 import org.kframework.kore.KORE;
 import org.kframework.krun.RunProcess;
 import org.kframework.krun.RunProcess.ProcessOutput;
 import org.kframework.krun.api.io.FileSystem;
+import org.kframework.parser.kore.KoreParser;
+import org.kframework.utils.errorsystem.KException;
+import org.kframework.utils.errorsystem.ParseFailedException;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.charset.CharacterCodingException;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 
 /**
@@ -104,8 +103,23 @@ public class BuiltinIOOperations {
         }
     }
 
-    public static Term parse(StringToken term1, StringToken term2, TermContext termContext) {
-        throw new RuntimeException("Not implemented!");
+    /**
+     * Execute path and gives input as an argument.
+     * Example `cat file` or `echo string` or whatever external parser.
+     */
+    public static Term parse(StringToken path, StringToken input, TermContext termContext) {
+        List<String> tokens = new ArrayList<>(Arrays.asList(path.stringValue().split(" ")));
+        tokens.add(input.stringValue());
+        Map<String, String> environment = new HashMap<>();
+        RunProcess.ProcessOutput output = RunProcess.execute(environment, new ProcessBuilder().directory(new File(".")), tokens.toArray(new String[tokens.size()]));
+
+        if (output.exitCode != 0) {
+            throw new ParseFailedException(new KException(KException.ExceptionType.ERROR, KException.KExceptionGroup.CRITICAL, "Parser returned a non-zero exit code: "
+                    + output.exitCode + "\nStdout:\n" + new String(output.stdout) + "\nStderr:\n" + new String(output.stderr)));
+        }
+
+        byte[] kast = output.stdout != null ? output.stdout : new byte[0];
+        return termContext.getKOREtoBackendKILConverter().convert(KoreParser.parse(new String(kast), Source.apply("")));
     }
 
     public static Term parseInModule(StringToken input, StringToken startSymbol, StringToken moduleName, TermContext termContext) {

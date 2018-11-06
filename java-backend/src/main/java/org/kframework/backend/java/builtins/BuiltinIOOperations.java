@@ -109,11 +109,14 @@ public class BuiltinIOOperations {
 
     /**
      * Execute path and gives input as an argument.
+     * No whitespaces allowed in path.
      * Example `cat file` or `echo string` or whatever external parser.
      */
     public static Term parse(StringToken path, StringToken input, TermContext termContext) {
         List<String> tokens = new ArrayList<>(Arrays.asList(path.stringValue().split(" ")));
-        tokens.add(input.stringValue());
+        String tempF = "tempRuntimeParser.txt";
+        termContext.global().files.saveToTemp(tempF, input.stringValue());
+        tokens.add(termContext.global().files.resolveTemp(tempF).getAbsolutePath());
         Map<String, String> environment = new HashMap<>();
         RunProcess.ProcessOutput output = RunProcess.execute(environment, new ProcessBuilder().directory(new File(".")), tokens.toArray(new String[tokens.size()]));
 
@@ -123,7 +126,7 @@ public class BuiltinIOOperations {
         }
 
         byte[] kast = output.stdout != null ? output.stdout : new byte[0];
-        return termContext.getKOREtoBackendKILConverter().convert(KoreParser.parse(new String(kast), Source.apply("")));
+        return termContext.getKOREtoBackendKILConverter().convert(KoreParser.parse(new String(kast), termContext.getSource()));
     }
 
     /**

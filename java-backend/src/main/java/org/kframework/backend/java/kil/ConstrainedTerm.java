@@ -163,8 +163,15 @@ public class ConstrainedTerm extends JavaSymbolicObject {
 
         /* apply pattern folding */
         constraint = constraint.simplifyModuloPatternFolding(context)
-                .add(constrainedTerm.data.constraint)
-                .simplifyModuloPatternFolding(context);
+                .add(constrainedTerm.data.constraint);
+        if (constraint.isFalse()) {
+            return null;
+        }
+
+        constraint = constraint.simplifyModuloPatternFolding(context);
+        if (constraint.isFalse()) {
+            return null;
+        }
         if (constraint.isFalse()) {
             return null;
         }

@@ -356,8 +356,8 @@ module INT
                  Int "xorInt" Int               [function, functional, left, latex({#1}\mathrel{\oplus_{\scriptstyle\it Int}}{#2}), hook(INT.xor)]
                > left:
                  Int "|Int" Int                 [function, functional, left, latex({#1}\mathrel{|_{\scriptstyle\it Int}}{#2}), hook(INT.or)]
-  syntax Int ::= "minInt" "(" Int "," Int ")"   [function, functional, smtlib(int_min), hook(INT.min)]
-               | "maxInt" "(" Int "," Int ")"   [function, functional, smtlib(int_max), hook(INT.max)]
+  syntax Int ::= minInt ( Int , Int )           [function, functional, smtlib(int_min), hook(INT.min)]
+               | maxInt ( Int , Int )           [function, functional, smtlib(int_max), hook(INT.max)]
                | absInt ( Int )                 [function, functional, smtlib(int_abs), hook(INT.abs)]
                | log2Int ( Int )                [function, hook(INT.log2)]
 
@@ -589,7 +589,7 @@ endmodule
 module BYTES-SYNTAX
   syntax Bytes [hook(BYTES.Bytes)]
 
-  syntax Bytes ::= ".Bytes" [function, functional, hook(BYTES.empty), impure]
+  syntax Bytes ::= ".Bytes" [function, functional, hook(BYTES.empty)]
   syntax Endianness ::= "LE" [klabel(littleEndianBytes)]
                       | "BE" [klabel(bigEndianBytes)]
   syntax Signedness ::= "Signed" [klabel(signedBytes)]

@@ -811,7 +811,7 @@ public class KItem extends Term implements KItemRepresentation, HasGlobalContext
     @Override
     public String toString() {
         String label = kLabel.toString();
-        if(label.equals("<programBytes>") || label.equals("<code>")) {
+        if(label.equals("<programBytes>") || label.equals("<program>") || label.equals("<code>")) {
             return kLabel + "(" + ((KList)kList).getContents().size() + ")";
         } else if (label.equals("#mkCall__________EVM")) {
             return kLabel + "()";

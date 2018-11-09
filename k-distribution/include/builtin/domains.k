@@ -893,7 +893,10 @@ module K-IO
                  | "#lstat" "(" String ")" [function, hook(IO.lstat), impure]
                  | "#opendir" "(" String ")" [function, hook(IO.opendir), impure]
 
-  syntax KItem ::= #parse ( String , String ) [function, hook(IO.parse), impure]
+  // #parseString ( <external path to parser>, <token to parse>)
+  syntax KItem ::= #parseString ( String , K ) [function, hook(IO.parseString), impure]
+  // #parseString ( <external path to parser>, <filename to parse>)
+  syntax KItem ::= #parseFile   ( String , String ) [function, hook(IO.parseFile),   impure]
   syntax KItem ::= #parseInModule(String, // input
                                   String, // start symbol
                                   String) // module name

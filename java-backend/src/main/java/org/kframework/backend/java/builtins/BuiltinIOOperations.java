@@ -8,6 +8,7 @@ import org.kframework.krun.RunProcess;
 import org.kframework.krun.RunProcess.ProcessOutput;
 import org.kframework.krun.api.io.FileSystem;
 import org.kframework.parser.kore.KoreParser;
+import org.kframework.utils.StringUtil;
 import org.kframework.utils.errorsystem.KException;
 import org.kframework.utils.errorsystem.ParseFailedException;
 
@@ -106,19 +107,46 @@ public class BuiltinIOOperations {
     /**
      * Execute path and gives input as an argument.
      * No whitespaces allowed in path.
-     * Example `cat file` or `echo string` or whatever external parser.
+     * Example `cat file` or `echo string` or any external parser.
+     * Expects KAST format.
      */
-    public static Term parse(StringToken path, StringToken input, TermContext termContext) {
+    public static Term parseString(StringToken path, Token input, TermContext termContext) {
         List<String> tokens = new ArrayList<>(Arrays.asList(path.stringValue().split(" ")));
         String tempF = "tempRuntimeParser.txt";
-        termContext.global().files.saveToTemp(tempF, input.stringValue());
+        termContext.global().files.saveToTemp(tempF, input.s());
         tokens.add(termContext.global().files.resolveTemp(tempF).getAbsolutePath());
         Map<String, String> environment = new HashMap<>();
         RunProcess.ProcessOutput output = RunProcess.execute(environment, new ProcessBuilder().directory(new File(".")), tokens.toArray(new String[tokens.size()]));
 
         if (output.exitCode != 0) {
-            throw new ParseFailedException(new KException(KException.ExceptionType.ERROR, KException.KExceptionGroup.CRITICAL, "Parser returned a non-zero exit code: "
-                    + output.exitCode + "\nStdout:\n" + new String(output.stdout) + "\nStderr:\n" + new String(output.stderr)));
+            return termContext.getKOREtoBackendKILConverter().convert(KoreParser.parse(
+                    "parseError(" +
+                            "#token(" + StringUtil.enquoteCString(input.s()) + ", \"Input\"), " +
+                            "#token(" + StringUtil.enquoteCString(new String(output.stdout)) + ", \"Stdout\"), " +
+                            "#token(" + StringUtil.enquoteCString(new String(output.stderr)) + ", \"Stderr\"))"
+            , termContext.getSource()));
+        }
+
+        byte[] kast = output.stdout != null ? output.stdout : new byte[0];
+        return termContext.getKOREtoBackendKILConverter().convert(KoreParser.parse(new String(kast), termContext.getSource()));
+    }
+
+    /**
+     * Execute path and parse the file represented by input. See above.
+     */
+    public static Term parseFile(StringToken path, Token input, TermContext termContext) {
+        List<String> tokens = new ArrayList<>(Arrays.asList(path.stringValue().split(" ")));
+        tokens.add(input.s());
+        Map<String, String> environment = new HashMap<>();
+        RunProcess.ProcessOutput output = RunProcess.execute(environment, new ProcessBuilder().directory(new File(".")), tokens.toArray(new String[tokens.size()]));
+
+        if (output.exitCode != 0) {
+            return termContext.getKOREtoBackendKILConverter().convert(KoreParser.parse(
+                    "parseError(" +
+                            "#token(" + StringUtil.enquoteCString(input.s()) + ", \"Input\"), " +
+                            "#token(" + StringUtil.enquoteCString(new String(output.stdout)) + ", \"Stdout\"), " +
+                            "#token(" + StringUtil.enquoteCString(new String(output.stderr)) + ", \"Stderr\"))"
+                    , termContext.getSource()));
         }
 
         byte[] kast = output.stdout != null ? output.stdout : new byte[0];

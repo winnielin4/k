@@ -331,7 +331,7 @@ module INT
   imports BOOL
   imports K-EQUAL
 
-  syntax Int ::= "~Int" Int                     [function, functional, latex(\mathop{\sim_{\scriptstyle\it Int}}{#1}), hook(INT.not)]
+  syntax Int ::= "~Int" Int                     [function, functional, smtlib(int_not), latex(\mathop{\sim_{\scriptstyle\it Int}}{#1}), hook(INT.not)]
                > left:
                  Int "^Int" Int                 [function, left, smtlib(^), latex({#1}\mathrel{{\char`\^}_{\!\scriptstyle\it Int}}{#2}), hook(INT.pow)]
                | Int "^%Int" Int Int            [function, left, smtlib((mod (^ #1 #2) #3)), hook(INT.powmod)]
@@ -348,14 +348,14 @@ module INT
                  Int "+Int" Int                 [function, functional, left, smtlib(+), latex({#1}\mathrel{+_{\scriptstyle\it Int}}{#2}), hook(INT.add), klabel(_+Int_), symbol]
                | Int "-Int" Int                 [function, functional, left, smtlib(-), latex({#1}\mathrel{-_{\scriptstyle\it Int}}{#2}), hook(INT.sub)]
                > left:
-                 Int ">>Int" Int                [function, left, latex({#1}\mathrel{\gg_{\scriptstyle\it Int}}{#2}), hook(INT.shr)]
-               | Int "<<Int" Int                [function, left, latex({#1}\mathrel{\ll_{\scriptstyle\it Int}}{#2}), hook(INT.shl)]
+                 Int ">>Int" Int                [function, left, smtlib(shr), latex({#1}\mathrel{\gg_{\scriptstyle\it Int}}{#2}), hook(INT.shr)]
+               | Int "<<Int" Int                [function, left, smtlib(shl), latex({#1}\mathrel{\ll_{\scriptstyle\it Int}}{#2}), hook(INT.shl)]
                > left:
-                 Int "&Int" Int                 [function, functional, left, latex({#1}\mathrel{\&_{\scriptstyle\it Int}}{#2}), hook(INT.and)]
+                 Int "&Int" Int                 [function, functional, left, smtlib(int_and), latex({#1}\mathrel{\&_{\scriptstyle\it Int}}{#2}), hook(INT.and)]
                > left:
-                 Int "xorInt" Int               [function, functional, left, latex({#1}\mathrel{\oplus_{\scriptstyle\it Int}}{#2}), hook(INT.xor)]
+                 Int "xorInt" Int               [function, functional, left, smtlib(int_xor), latex({#1}\mathrel{\oplus_{\scriptstyle\it Int}}{#2}), hook(INT.xor)]
                > left:
-                 Int "|Int" Int                 [function, functional, left, latex({#1}\mathrel{|_{\scriptstyle\it Int}}{#2}), hook(INT.or)]
+                 Int "|Int" Int                 [function, functional, left, smtlib(int_or), latex({#1}\mathrel{|_{\scriptstyle\it Int}}{#2}), hook(INT.or)]
   syntax Int ::= minInt ( Int , Int )           [function, functional, smtlib(int_min), hook(INT.min)]
                | maxInt ( Int , Int )           [function, functional, smtlib(int_max), hook(INT.max)]
                | absInt ( Int )                 [function, functional, smtlib(int_abs), hook(INT.abs)]

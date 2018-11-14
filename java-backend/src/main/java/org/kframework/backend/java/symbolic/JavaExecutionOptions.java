@@ -119,6 +119,11 @@ public final class JavaExecutionOptions {
     @Parameter(names="--log-target", description="Log target term.")
     public boolean logTarget = false;
 
+    @Parameter(names="--cache-tostring",
+            description="Cache toString() result for KItem, Equality and DisjunctiveFormula. " +
+                    "Speeds up logging but eats more memory.", arity = 1)
+    public boolean cacheToString = true;
+
     public static class LogEventConverter extends BaseEnumConverter<StateLog.LogEvent> {
 
         public LogEventConverter(String optionName) {

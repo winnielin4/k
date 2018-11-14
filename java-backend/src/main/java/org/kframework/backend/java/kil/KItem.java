@@ -35,6 +35,7 @@ import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -808,8 +809,25 @@ public class KItem extends Term implements KItemRepresentation {
         return hashCode;
     }
 
+    private static Map<KItem, String> toStringCache = new HashMap<>();
+
     @Override
     public String toString() {
+        if (global.javaExecutionOptions.cacheToString) {
+            String cached = toStringCache.get(this);
+            if (cached != null) {
+                return cached;
+            }
+
+            String result = toStringImpl();
+            toStringCache.put(this, result);
+            return result;
+        } else {
+            return toStringImpl();
+        }
+    }
+
+    public String toStringImpl() {
         String label = kLabel.toString();
         if(label.equals("<programBytes>") || label.equals("<code>")) {
             return kLabel + "(" + ((KList)kList).getContents().size() + ")";

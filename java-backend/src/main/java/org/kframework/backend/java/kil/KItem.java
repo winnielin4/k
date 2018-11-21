@@ -813,18 +813,16 @@ public class KItem extends Term implements KItemRepresentation {
 
     @Override
     public String toString() {
-        if (global.javaExecutionOptions.cacheToString) {
-            String cached = toStringCache.get(this);
-            if (cached != null) {
-                return cached;
-            }
-
-            String result = toStringImpl();
-            toStringCache.put(this, result);
-            return result;
-        } else {
-            return toStringImpl();
+        String cached = toStringCache.get(this);
+        if (cached != null) {
+            return cached;
         }
+
+        String result = toStringImpl();
+        if (global.javaExecutionOptions.cacheToString) {
+            toStringCache.put(this, result);
+        }
+        return result;
     }
 
     public String toStringImpl() {

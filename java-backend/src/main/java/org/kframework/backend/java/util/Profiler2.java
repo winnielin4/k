@@ -3,6 +3,8 @@ package org.kframework.backend.java.util;
 
 import com.google.inject.Inject;
 import org.kframework.backend.java.symbolic.ConjunctiveFormula;
+import org.kframework.backend.java.symbolic.JavaExecutionOptions;
+import org.kframework.main.GlobalOptions;
 import org.kframework.main.StartTimeHolder;
 import org.kframework.utils.inject.RequestScoped;
 
@@ -20,6 +22,8 @@ import java.util.stream.Collectors;
 public class Profiler2 {
 
     private final long startTime;
+    private GlobalOptions globalOptions;
+    private final JavaExecutionOptions javaExecutionOptions;
 
     private long parsingTimestamp;
     private long initTimestamp;
@@ -42,8 +46,10 @@ public class Profiler2 {
     }
 
     @Inject
-    public Profiler2(StartTimeHolder startTimeHolder) {
+    public Profiler2(StartTimeHolder startTimeHolder, GlobalOptions globalOptions, JavaExecutionOptions javaExecutionOptions) {
         this.startTime = startTimeHolder.getStartTime();
+        this.globalOptions = globalOptions;
+        this.javaExecutionOptions = javaExecutionOptions;
     }
 
     public void printResult() {
@@ -68,6 +74,8 @@ public class Profiler2 {
             System.err.format("  log time:             %s\n\n", logOverheadTimer);
         }
 
+        printMemoryUsage();
+
         System.err.format("resolveFunction top-level uncached: %d\n", countResFuncTopUncached);
         int countCached = resFuncNanoTimer.getCount() - countResFuncTopUncached;
         if (countCached > 0) {
@@ -86,6 +94,22 @@ public class Profiler2 {
             Profiler.printResult();
         }
         System.err.println("==================================\n");
+    }
+
+    private void printMemoryUsage() {
+        System.err.format("Used memory:                   %d MB\n", usedMemory());
+        if (javaExecutionOptions.logMemoryAfterGC) {
+            long beforeGC = System.currentTimeMillis();
+            System.gc();
+            double gcTime = (System.currentTimeMillis() - beforeGC) / 1000.;
+            System.err.format("Used memory after System.gc(): %d MB\n", usedMemory());
+            System.err.format("\tSystem.gc() time: %.3f\n", gcTime);
+        }
+        System.err.println();
+    }
+
+    public static long usedMemory() {
+        return (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / (1024 * 1024);
     }
 
     public void logParsingTime() {

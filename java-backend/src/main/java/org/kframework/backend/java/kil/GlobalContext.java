@@ -79,7 +79,8 @@ public class GlobalContext implements Serializable {
         this.kItemOps = new KItemOperations(stage, javaExecutionOptions.deterministicFunctions, kem, this::builtins, globalOptions);
         this.stage = stage;
         this.profiler = profiler;
-        prettyPrinter = new PrettyPrinter(kprint, coreDefinition);
+        profiler.setContext(this);
+        this.prettyPrinter = new PrettyPrinter(kprint, coreDefinition);
     }
 
     private transient BuiltinFunction builtinFunction;

@@ -280,7 +280,7 @@ public class InitializeRewriter implements Function<org.kframework.definition.De
                         termContext.setInitialVariables(lhs.variableSet());
                         termContext.setTopConstraint(null);
                         if (rewritingContext.javaExecutionOptions.cacheFunctionsOptimized) {
-                            rewritingContext.functionCache.clearCache();
+                            rewritingContext.functionCache.clear();
                         }
                         rewritingContext.stateLog.log(StateLog.LogEvent.REACHINIT,   lhs.term(), lhs.constraint());
                         rewritingContext.stateLog.log(StateLog.LogEvent.REACHTARGET, rhs.term(), rhs.constraint());

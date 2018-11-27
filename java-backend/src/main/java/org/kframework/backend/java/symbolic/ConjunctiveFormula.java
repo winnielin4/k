@@ -552,9 +552,10 @@ public class ConjunctiveFormula extends Term implements CollectionInternalRepres
             PersistentUniqueList<Equality> equalities,
             PersistentUniqueList<DisjunctiveFormula> disjunctions,
             Equality equality) {
-        if (RuleAuditing.isAuditBegun() || global.javaExecutionOptions.logBasic) {
-            System.err.println("Unification failure: " + equality.leftHandSide()
-                    + " does not unify with " + equality.rightHandSide());
+        if ((RuleAuditing.isAuditBegun() || global.javaExecutionOptions.logBasic)
+                && !(equality.leftHandSide() instanceof BoolToken && equality.rightHandSide() instanceof BoolToken)) {
+            System.err.format("Unification failure: %s does not unify with %s\n",
+                    equality.leftHandSide(), equality.rightHandSide());
         }
         return new ConjunctiveFormula(
                 substitution,

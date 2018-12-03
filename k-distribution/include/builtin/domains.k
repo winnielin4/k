@@ -897,6 +897,7 @@ module K-IO
   syntax KItem ::= #parseString ( String , K ) [function, hook(IO.parseString), impure]
   // #parseString ( <external path to parser>, <filename to parse>)
   syntax KItem ::= #parseFile   ( String , String ) [function, hook(IO.parseFile),   impure]
+  syntax KItem ::= #loadDefinition   ( String , K ) [function, hook(IO.loadDefinition),   impure]
   syntax KItem ::= #parseInModule(String, // input
                                   String, // start symbol
                                   String) // module name

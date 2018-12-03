@@ -28,7 +28,7 @@ import static org.kframework.definition.Constructors.*;
 /**
  * Expands configuration declaration to KORE productions and rules.
  */
-class ResolveConfig {
+public class ResolveConfig {
     private final Definition def;
     private final boolean isStrict;
     private final boolean kore;

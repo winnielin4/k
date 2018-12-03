@@ -143,7 +143,7 @@ public class ParseInModule implements Serializable {
      * @param startColumn
      * @return
      */
-    private Tuple2<Either<Set<ParseFailedException>, Term>, Set<ParseFailedException>>
+    public Tuple2<Either<Set<ParseFailedException>, Term>, Set<ParseFailedException>>
             parseStringTerm(String input, Sort startSymbol, Scanner scanner, Source source, int startLine, int startColumn, boolean inferSortChecks) {
         scanner = getGrammar(scanner);
 

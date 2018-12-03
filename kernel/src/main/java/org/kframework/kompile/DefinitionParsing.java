@@ -18,6 +18,7 @@ import org.kframework.definition.Sentence;
 import org.kframework.kore.K;
 import org.kframework.kore.KApply;
 import org.kframework.kore.Sort;
+import org.kframework.parser.Term;
 import org.kframework.parser.TreeNodesToKORE;
 import org.kframework.parser.concrete2kore.ParseCache;
 import org.kframework.parser.concrete2kore.ParseCache.ParsedSentence;
@@ -26,6 +27,7 @@ import org.kframework.parser.concrete2kore.ParserUtils;
 import org.kframework.parser.concrete2kore.generator.RuleGrammarGenerator;
 import org.kframework.parser.concrete2kore.kernel.Scanner;
 import org.kframework.parser.outer.Outer;
+import org.kframework.unparser.TreeNodesToK5AST;
 import org.kframework.utils.BinaryLoader;
 import org.kframework.utils.StringUtil;
 import org.kframework.utils.errorsystem.KEMException;
@@ -36,6 +38,8 @@ import scala.Option;
 import scala.Tuple2;
 import scala.collection.Set;
 import scala.util.Either;
+import scala.util.Left;
+import scala.util.Right;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -390,12 +394,31 @@ public class DefinitionParsing {
                 return Stream.of(parse.getParse());
             }
         }
-        result = parser.parseString(b.contents(), START_SYMBOL, scanner, source, startLine, startColumn, !b.att().contains("macro") && !b.att().contains("alias"));
+        // result = parser.parseString(b.contents(), START_SYMBOL, scanner, source, startLine, startColumn, !b.att().contains("macro") && !b.att().contains("alias"));
+        ////////////////
+        boolean inferSortChecks = !b.att().contains("macro") && !b.att().contains("alias");
+        final Tuple2<Either<java.util.Set<ParseFailedException>, Term>, java.util.Set<ParseFailedException>> resultTerm
+                = parser.parseStringTerm(b.contents(), START_SYMBOL, scanner, source, startLine, startColumn, inferSortChecks);
+        Either<java.util.Set<ParseFailedException>, K> parseInfo;
+        if (resultTerm._1().isLeft()) {
+            parseInfo = Left.apply(resultTerm._1().left().get());
+        } else {
+            parseInfo = Right.apply(new TreeNodesToKORE(Outer::parseSort, inferSortChecks && isStrict).apply(resultTerm._1().right().get()));
+        }
+        result = new Tuple2<>(parseInfo, resultTerm._2());
+        ////////////////
         parsedBubbles.getAndIncrement();
         kem.addAllKException(result._2().stream().map(e -> e.getKException()).collect(Collectors.toList()));
         if (result._1().isRight()) {
             KApply k = (KApply) new TreeNodesToKORE(Outer::parseSort, isStrict).down(result._1().right().get());
-            k = KApply(k.klabel(), k.klist(), k.att().addAll(b.att().remove("contentStartLine").remove("contentStartColumn").remove(Source.class).remove(Location.class)));
+            k = KApply(k.klabel(), k.klist(),
+                    k.att().addAll(b.att()
+                            .remove("contentStartLine")
+                            .remove("contentStartColumn")
+                            .remove(Source.class)
+                            .remove(Location.class))
+                            .add("originalBubble", b.contents())
+            .add("kastBubble", TreeNodesToK5AST.apply(resultTerm._1.right().get())));
             cache.put(b.contents(), new ParsedSentence(k, new HashSet<>(result._2())));
             return Stream.of(k);
         } else {

@@ -1,8 +1,9 @@
 // Copyright (c) 2013-2019 K Team. All Rights Reserved.
 package org.kframework.backend.java.builtins;
 
-import org.kframework.attributes.Source;
 import org.kframework.backend.java.kil.*;
+import org.kframework.definition.Definition;
+import org.kframework.kore.K;
 import org.kframework.kore.KORE;
 import org.kframework.kore.KToken;
 import org.kframework.kore.TransformK;
@@ -11,8 +12,6 @@ import org.kframework.krun.RunProcess.ProcessOutput;
 import org.kframework.krun.api.io.FileSystem;
 import org.kframework.parser.kore.KoreParser;
 import org.kframework.utils.StringUtil;
-import org.kframework.utils.errorsystem.KException;
-import org.kframework.utils.errorsystem.ParseFailedException;
 
 import java.io.File;
 import java.io.IOException;
@@ -157,28 +156,6 @@ public class BuiltinIOOperations {
         return termContext.getKOREtoBackendKILConverter().convert(KoreParser.parse(new String(kast), termContext.getSource()));
     }
 
-    /**
-     * Execute path and parse the file represented by input. See above.
-     */
-    public static Term parseFile(StringToken path, Token input, TermContext termContext) {
-        List<String> tokens = new ArrayList<>(Arrays.asList(path.stringValue().split(" ")));
-        tokens.add(input.s());
-        Map<String, String> environment = new HashMap<>();
-        RunProcess.ProcessOutput output = RunProcess.execute(environment, new ProcessBuilder().directory(new File(".")), tokens.toArray(new String[tokens.size()]));
-
-        if (output.exitCode != 0) {
-            return termContext.getKOREtoBackendKILConverter().convert(KoreParser.parse(
-                    "parseError(" +
-                            "#token(" + StringUtil.enquoteCString(input.s()) + ", \"Input\"), " +
-                            "#token(" + StringUtil.enquoteCString(new String(output.stdout)) + ", \"Stdout\"), " +
-                            "#token(" + StringUtil.enquoteCString(new String(output.stderr)) + ", \"Stderr\"))"
-                    , termContext.getSource()));
-        }
-
-        byte[] kast = output.stdout != null ? output.stdout : new byte[0];
-        return termContext.getKOREtoBackendKILConverter().convert(KoreParser.parse(new String(kast), termContext.getSource()));
-    }
-
     public static Term loadDefinition(StringToken path, Token input, TermContext termContext) {
         List<String> tokens = new ArrayList<>(Arrays.asList(path.stringValue().split(" ")));
         String tempF = "tempRuntimeParser.txt";
@@ -199,31 +176,12 @@ public class BuiltinIOOperations {
 
         byte[] kast = output.stdout != null ? output.stdout : new byte[0];
         K kore = KoreParser.parse(new String(kast), termContext.getSource());
+        Term rez = termContext.getKOREtoBackendKILConverter().convert(kore);
 
         // parse bubbles
-        Definition def = org.kframework.Definition.from(new File(filePath));
-        // collect the bubbles from the java pipeline
-        // TODO: find a way to keep the configuration since it desuggars into syntax decl
-        Map<String, String> ss = stream(def.modules())
-                .flatMap(m -> stream(m.localSentences()))
-                .filter(s -> (s instanceof Rule || s instanceof Configuration) && s.att().contains("originalBubble") && s.att().contains("kastBubble"))
-                .collect(Collectors.toMap(s1 -> s1.att().get("originalBubble"), s2 -> s2.att().get("kastBubble")));
+        Definition definitionWithConfigBubble = org.kframework.Definition.from(new File(filePath));
+        // TODO: collect the bubbles and replace them in the newly parsed term
 
-        // visit the result of outer parsing and replace bubbles with parses from the java pipeline
-
-        K body = new TransformK() {
-            @Override
-            public K apply(KToken token) {
-                if (!token.sort().name().equals("Bubble"))
-                    return token;
-                for (String s : ss.keySet())
-                    if (token.s().startsWith(s))
-                        return KoreParser.parse(ss.get(s), termContext.getSource());
-                return token;
-            }
-        }.apply(kore);
-
-        Term rez = termContext.getKOREtoBackendKILConverter().convert(body);
         return rez;
     }
 

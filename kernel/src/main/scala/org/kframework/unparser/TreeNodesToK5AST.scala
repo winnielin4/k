@@ -2,7 +2,6 @@ package org.kframework.unparser
 
 import java.util
 
-import org.kframework.builtin.KLabels
 import org.kframework.parser.{Ambiguity, Constant, Term, TermCons}
 import org.kframework.utils.StringUtil
 
@@ -13,11 +12,7 @@ object TreeNodesToK5AST {
 
   def apply(t: Term): String = t match {
     case c@Constant(s, p) => "#token(" + StringUtil.enquoteCString(s) + "," + StringUtil.enquoteCString(p.sort.name) + ")"
-    case tc@TermCons(items, p) =>
-      (if (p.klabel.get.equals(KLabels.KREWRITE)) // KORE.parse tries to down rewrite so change the label to keep it as a kapp
-        KLabels.KREWRITE.name.toLowerCase
-      else
-        p.klabel.get) + "(" +
+    case tc@TermCons(items, p) => p.klabel.get + "(" +
       (if (items.isEmpty)
         ".KList"
       else

@@ -2,7 +2,9 @@
 package org.kframework.backend.java.builtins;
 
 import org.kframework.backend.java.kil.*;
+import org.kframework.definition.Configuration;
 import org.kframework.definition.Definition;
+import org.kframework.definition.Rule;
 import org.kframework.kore.K;
 import org.kframework.kore.KORE;
 import org.kframework.kore.KToken;
@@ -17,6 +19,9 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.CharacterCodingException;
 import java.util.*;
+import java.util.stream.Collectors;
+
+import static org.kframework.Collections.stream;
 
 import static org.kframework.Collections.stream;
 
@@ -176,12 +181,31 @@ public class BuiltinIOOperations {
 
         byte[] kast = output.stdout != null ? output.stdout : new byte[0];
         K kore = KoreParser.parse(new String(kast), termContext.getSource());
-        Term rez = termContext.getKOREtoBackendKILConverter().convert(kore);
 
         // parse bubbles
-        Definition definitionWithConfigBubble = org.kframework.Definition.from(new File(filePath));
-        // TODO: collect the bubbles and replace them in the newly parsed term
+        Definition def = org.kframework.Definition.from(new File(filePath));
+        // collect the bubbles from the java pipeline
+        // TODO: find a way to keep the configuration since it desuggars into syntax decl
+        Map<String, String> ss = stream(def.modules())
+                .flatMap(m -> stream(m.localSentences()))
+                .filter(s -> (s instanceof Rule || s instanceof Configuration) && s.att().contains("originalBubble") && s.att().contains("kastBubble"))
+                .collect(Collectors.toMap(s1 -> s1.att().get("originalBubble"), s2 -> s2.att().get("kastBubble")));
 
+        // visit the result of outer parsing and replace bubbles with parses from the java pipeline
+
+        K body = new TransformK() {
+            @Override
+            public K apply(KToken token) {
+                if (!token.sort().name().equals("Bubble"))
+                    return token;
+                for (String s : ss.keySet())
+                    if (token.s().startsWith(s))
+                        return KoreParser.parse(ss.get(s), termContext.getSource());
+                return token;
+            }
+        }.apply(kore);
+
+        Term rez = termContext.getKOREtoBackendKILConverter().convert(body);
         return rez;
     }
 

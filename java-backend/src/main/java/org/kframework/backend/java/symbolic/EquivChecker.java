@@ -2,7 +2,10 @@
 
 package org.kframework.backend.java.symbolic;
 
+import com.google.common.collect.Sets;
 import org.kframework.backend.java.kil.ConstrainedTerm;
+import org.kframework.backend.java.kil.Term;
+import org.kframework.backend.java.kil.Variable;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -186,8 +189,57 @@ public class EquivChecker {
                     ConjunctiveFormula e = ConjunctiveFormula.of(targetEnsures.get(i));
                     ConjunctiveFormula c = c1.add(c2).add(c0).simplify(); // TODO: termContext ??
                     if (!c.isFalse() && !c.checkUnsat() && c.smartImplies(e) /* c.implies(e, Collections.emptySet()) */) {
-                        ct1.mark = Mark.BLACK;
-                        ct2.mark = Mark.BLACK;
+                        System.out.println();
+                        System.out.println("IMPLICATION");
+                        System.out.println("===========");
+
+                        System.out.println("Sync Point #: " + i);
+
+                        // extract new constraints generated during the execution:  curr.constract - prev.constraint
+                        ConjunctiveFormula pathCondition1 = ((ConjunctiveFormula) ct1.prevSyncNode.currSyncNode.constraint().evaluate(ct1.prevSyncNode.currSyncNode.termContext())).simplifyConstraint(ct1.currSyncNode.constraint());
+                        ConjunctiveFormula pathCondition2 = ((ConjunctiveFormula) ct2.prevSyncNode.currSyncNode.constraint().evaluate(ct2.prevSyncNode.currSyncNode.termContext())).simplifyConstraint(ct2.currSyncNode.constraint());
+
+                        System.out.println("Path Condition LHS: " + pathCondition1.toString());
+                        System.out.println("Path Condition RHS: " + pathCondition2.toString());
+
+                        boolean c1c2 = false;
+                        boolean c2c1 = false;
+                        // check if the path conditions are the same
+                        if (c1.add(c0).orientSubstitution(pathCondition2.variableSet()).smartImplies(pathCondition2)) {
+                            c1c2 = true;
+                            System.out.println("lhs ==> rhs");
+                        }
+                        if (c2.add(c0).orientSubstitution(pathCondition1.variableSet()).smartImplies(pathCondition1)) {
+                            c2c1 = true;
+                            System.out.println("lhs <== rhs");
+                        }
+
+                        /*
+                        ConjunctiveFormula ccc1 = c1
+                                .add(c0)
+                                .add(ct2.prevSyncNode.constraint)
+                                .add(ct2.prevSyncNode.currSyncNode.constraint())
+                                .simplify();
+
+                        Set<Variable> c1OnlyVariables = Sets.difference(c1.variableSet(), e.variableSet());
+                        Set<Variable> c2OnlyVariables = Sets.difference(c2.variableSet(), e.variableSet());
+                        ConjunctiveFormula c1e = c1.orientSubstitution(c1OnlyVariables);
+                        c1e = c1e.removeBindings(c1OnlyVariables);
+                        ConjunctiveFormula c2e = c2.orientSubstitution(c2OnlyVariables);
+                        c2e = c2e.removeBindings(c2OnlyVariables);
+
+                        if (c1.add(c0).simplify().implies(c2e, c2OnlyVariables)) {
+                            System.out.println("c1 ==> c2");
+                        }
+                        if (c2.add(c0).simplify().implies(c1e, c1OnlyVariables)) {
+                            System.out.println("c1 <== c2");
+                        }
+                         */
+
+                        if (c1c2 && c2c1) {
+                            ct1.mark = Mark.BLACK;
+                            ct2.mark = Mark.BLACK;
+                        }
                     }
                 }
             }

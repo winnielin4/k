@@ -864,7 +864,7 @@ public class ConjunctiveFormula extends Term implements CollectionInternalRepres
      * Simplifies the given constraint by eliding the equalities and substitution entries that are
      * implied by this constraint.
      */
-    private ConjunctiveFormula simplifyConstraint(ConjunctiveFormula constraint) {
+    public ConjunctiveFormula simplifyConstraint(ConjunctiveFormula constraint) {
         Substitution<Variable, Term> simplifiedSubstitution = constraint.substitution.minusAll(
                 Maps.difference(constraint.substitution, substitution).entriesInCommon().keySet());
         Predicate<Equality> inConstraint = equality -> !equalities().contains(equality)

@@ -96,10 +96,12 @@ public class Definition {
         String definitionText = FileUtil.load(filePath);
         Pattern pattern = Pattern.compile("(?:^|\\s)module ([A-Z][A-Z\\-]*)");
         Matcher m = pattern.matcher(definitionText);
-        if(!m.find()) {
+        String mainModuleName = null;
+        while (m.find())
+            mainModuleName = m.group(m.groupCount());
+        if(mainModuleName == null) {
             throw new RuntimeException("Could not find any module in the definition");
         }
-        String mainModuleName = m.group(m.groupCount());
 
         File tempDir = Files.createTempDir();
         File theFileUtilTempDir = new File(tempDir.getAbsolutePath() + File.pathSeparator + "tempDir");

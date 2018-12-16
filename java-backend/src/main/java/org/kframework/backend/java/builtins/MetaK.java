@@ -16,9 +16,10 @@ import org.kframework.backend.java.symbolic.CopyOnWriteTransformer;
 import org.kframework.backend.java.symbolic.PatternMatcher;
 import org.kframework.kore.KVariable;
 
+import com.microsoft.z3.*;
+
 import java.util.HashSet;
 import java.util.Set;
-
 
 /**
  * Table of {@code public static} methods for builtin meta K operations.
@@ -221,4 +222,29 @@ public class MetaK {
     public static BoolToken isVariable(Term term, TermContext context) {
         return BoolToken.of(term.isVariable());
     }
+
+    public static StringToken queryZ3(StringToken query, TermContext context)
+    {
+        Context z3 = new Context();
+        Solver solver = z3.mkSolver();
+        BoolExpr[] assertions = z3.parseSMTLIB2String( query.stringValue()
+                                                     , new Symbol[0]
+                                                     , new Sort[0]
+                                                     , new Symbol[0]
+                                                     , new FuncDecl[0]
+                                                     );
+        for (BoolExpr assertion : assertions)
+            solver.add(assertions);
+        Status r = solver.check();
+
+        StringToken ret = null;
+        switch (r) {
+        case UNSATISFIABLE : ret = StringToken.of("UNSAT");   break;
+        case SATISFIABLE   : ret = StringToken.of("SAT");     break;
+        case UNKNOWN       : ret = StringToken.of("UNKNOWN"); break;
+        }
+        z3.close();
+        return ret;
+    }
+
 }

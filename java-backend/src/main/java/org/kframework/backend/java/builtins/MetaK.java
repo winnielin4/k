@@ -218,7 +218,7 @@ public class MetaK {
         return BoolToken.of(term.isVariable());
     }
 
-    public static StringToken queryZ3(StringToken query, TermContext context)
+    public static StringToken z3CheckSAT(StringToken query, TermContext context)
     {
         Context z3 = new Context();
         Solver solver = z3.mkSolver();

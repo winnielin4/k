@@ -14,6 +14,7 @@ import org.kframework.rewriter.Rewriter;
 import org.kframework.unparser.KPrint;
 import org.kframework.unparser.PrettyPrinter;
 import org.kframework.unparser.WantsPrettyPrinter;
+import org.kframework.utils.InterrupterRunnable;
 import org.kframework.utils.Stopwatch;
 import org.kframework.utils.errorsystem.KEMException;
 import org.kframework.utils.errorsystem.KExceptionManager;
@@ -55,6 +56,10 @@ public class KProve {
             ((WantsPrettyPrinter) rewriter).setPrettyPrinter(prettyPrinter);
         }
 
+        if (options.global.verbose) {
+            //will interrupt the thread on Ctrl+C and print the summary.
+            Runtime.getRuntime().addShutdownHook(new Thread(new InterrupterRunnable(Thread.currentThread())));
+        }
         K results = rewriter.prove(specModule);
         int exit;
         if (results instanceof KApply) {

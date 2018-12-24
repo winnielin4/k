@@ -117,6 +117,11 @@ public final class JavaExecutionOptions {
             description="Log actual z3 queries. Activates --debug-z3 automatically.")
     public boolean debugZ3Queries = false;
 
+    @Parameter(names = "--halt-cells", description = "The comma-separated list of cells on which early halt check is " +
+            "performed. If the content of these cells matches the respective cells in target term, execution will halt" +
+            "regardless of the content of other cells. Recommended value for KEVM: \"k,pc\"")
+    public List<String> haltCells = Collections.singletonList("k");
+
     @Parameter(names = "--halt-local-mem-non-map", description = "KEVM-specific. Halt when <localMem> cell at the end " +
             "of a step is not a map. useful debug option when memory model is a K builtin map. " +
             "Otherwise option should be false.")

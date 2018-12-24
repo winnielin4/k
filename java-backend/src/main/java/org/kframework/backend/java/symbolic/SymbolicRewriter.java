@@ -602,9 +602,11 @@ public class SymbolicRewriter {
         global.stateLog.log(StateLog.LogEvent.REACHINIT,   initialTerm.term(), initialTerm.constraint());
         global.stateLog.log(StateLog.LogEvent.REACHTARGET, targetTerm.term(),  targetTerm.constraint());
 
-        KItem initialKCell = getCell((KItem) initialTerm.term(), "<k>");
-        KItem targetKCell = getCell((KItem) targetTerm.term(), "<k>");
-        boolean initKEqualsTargetK = initialKCell == null || initialKCell.equals(targetKCell);
+        KItem initHaltCells = buildHaltCells((KItem) initialTerm.term());
+        KItem targetHaltCells = buildHaltCells((KItem) targetTerm.term());
+        ConstrainedTerm targetHalt
+                = new ConstrainedTerm(targetHaltCells, targetTerm.constraint(), targetTerm.termContext());
+        boolean initHaltEqualsTargetHalt = targetHaltCells == null || initHaltCells.equals(targetHaltCells);
 
         visited.add(initialTerm);
         queue.add(initialTerm);
@@ -642,24 +644,23 @@ public class SymbolicRewriter {
                 try { //not formatting to minimize git merge conflicts.
 
                 v++;
-                ConstrainedTerm termK = new ConstrainedTerm(getCell((KItem) term.term(), "<k>"),
+                ConstrainedTerm termHalt = new ConstrainedTerm(buildHaltCells((KItem) term.term()),
                         term.constraint(), term.termContext());
-                ConstrainedTerm targetK = new ConstrainedTerm(getCell((KItem) targetTerm.term(), "<k>"),
-                        targetTerm.constraint(), targetTerm.termContext());
-                //if <k> cell matches the target <k>, we consider this state final.
-                boolean kMatchesTarget = termK.matchesTermModuloSubstitutions(targetK);
+                //if halt cells match same cells in target, we consider this state final.
+                boolean haltCellsMatchTarget
+                        = targetHaltCells == null || termHalt.matchesTermModuloSubstitutions(targetHalt);
 
                 boolean oldDebug =  global.javaExecutionOptions.debugZ3;
 
-                if (kMatchesTarget && global.javaExecutionOptions.debugLastStep
+                if (haltCellsMatchTarget && global.javaExecutionOptions.debugLastStep
                         || global.javaExecutionOptions.debugSteps.contains(String.valueOf(step))) {
                     global.javaExecutionOptions.debugZ3 = true;
                     global.javaExecutionOptions.log = true;
                 }
 
                 boolean alreadyLogged = logStep(step, v, targetCallData, term,
-                        step == 1 || kMatchesTarget, false);
-                if (kMatchesTarget) {
+                        step == 1 || haltCellsMatchTarget, false);
+                if (haltCellsMatchTarget) {
                     if (term.implies(targetTerm, rule, step > 1)) {
                         global.stateLog.log(StateLog.LogEvent.REACHPROVED, term.term(), term.constraint());
                         if (global.javaExecutionOptions.logBasic) {
@@ -669,17 +670,15 @@ public class SymbolicRewriter {
                         successPaths++;
                         successResults.add(term);
                         continue;
-                    } else if (!initKEqualsTargetK) {
+                    } else if (!initHaltEqualsTargetHalt) {
                         //Kprove customization: if <k> matches target <k>, further evaluation is probably useless. Halting.
                         logStep(step, v, targetCallData, term, global.javaExecutionOptions.logBasic, alreadyLogged);
                         System.err.println("Halt! Terminating branch.");
                         proofResults.add(term);
                         continue;
-                    } else {
-                        if (step > 1 && global.javaExecutionOptions.logBasic) {
+                    } else if (targetHaltCells != null && step > 1 && global.javaExecutionOptions.logBasic) {
                             System.err.println("Circularity spec. " +
                                     "Warnings 'Final implication term not matching' above possibly not an issue.");
-                        }
                     }
                 }
 
@@ -1054,6 +1053,17 @@ public class SymbolicRewriter {
             }
         }
         return null;
+    }
+
+    private KItem buildHaltCells(KItem root) {
+        if (global.javaExecutionOptions.haltCells.isEmpty()) {
+            return null;
+        }
+        List<Term> cells = global.javaExecutionOptions.haltCells.stream()
+                .map(name -> getCell(root, String.format("<%s>", name)))
+                .collect(Collectors.toList());
+        return KItem.of(KLabelConstant.of(KLabels.HALT_CELLS_CELL, global.getDefinition()), KList.concatenate(cells),
+                global);
     }
 
     private boolean inNewStmt(BuiltinList kSequence) {

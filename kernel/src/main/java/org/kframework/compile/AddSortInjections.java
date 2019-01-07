@@ -81,7 +81,7 @@ public class AddSortInjections {
 
     public K addInjections(K term, Sort expectedSort) {
         Sort actualSort = sort(term, expectedSort);
-        if (actualSort == null) {
+        if (actualSort == null || actualSort.equals(Sorts.KResult())) {
             actualSort = expectedSort;
         }
         if (actualSort.equals(expectedSort)) {

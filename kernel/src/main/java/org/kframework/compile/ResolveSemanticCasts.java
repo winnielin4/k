@@ -2,6 +2,7 @@
 package org.kframework.compile;
 
 import org.kframework.builtin.BooleanUtils;
+import org.kframework.builtin.Sorts;
 import org.kframework.definition.Context;
 import org.kframework.definition.Rule;
 import org.kframework.definition.Sentence;
@@ -72,7 +73,7 @@ public class ResolveSemanticCasts {
     K addSideCondition(K requires, boolean macro) {
         if (skipSortPredicates || macro) {
             if (exceptKResult) {
-                casts.removeIf(k -> !k.klabel().name().equals("#SemanticCastToKResult"));
+                casts.removeIf(k -> !Outer.parseSort(getSortNameOfCast(k)).equals(Sorts.KResult()));
             } else {
                 casts.clear();
             }
@@ -110,7 +111,11 @@ public class ResolveSemanticCasts {
                     K child = v.klist().items().get(0);
                     if (child instanceof KVariable) {
                         KVariable var = (KVariable) child;
-                        varToTypedVar.put(var, KVariable(var.name(), var.att().contains(Sort.class) ? var.att() : var.att().add(Sort.class, Outer.parseSort(getSortNameOfCast(v)))));
+                        if (skipSortPredicates && exceptKResult && Outer.parseSort(getSortNameOfCast(v)).equals(Sorts.KResult())) {
+                            varToTypedVar.put(var, KVariable(var.name(), var.att().remove(Sort.class)));
+                        } else {
+                            varToTypedVar.put(var, KVariable(var.name(), var.att().contains(Sort.class) ? var.att() : var.att().add(Sort.class, Outer.parseSort(getSortNameOfCast(v)))));
+                        }
                     }
                 }
                 super.apply(v);

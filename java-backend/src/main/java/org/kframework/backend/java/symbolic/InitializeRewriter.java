@@ -160,7 +160,7 @@ public class InitializeRewriter implements Function<Module, Rewriter> {
             rewritingContext.stateLog.open("execute-" + Integer.toString(Math.abs(k.hashCode())));
             TermContext termContext = TermContext.builder(rewritingContext).freshCounter(initCounterValue).build();
             KOREtoBackendKIL converter = new KOREtoBackendKIL(module, definition, termContext.global(), false);
-            ResolveSemanticCasts resolveCasts = new ResolveSemanticCasts(true);
+            ResolveSemanticCasts resolveCasts = new ResolveSemanticCasts(true, false);
             ExpandMacros macroExpander = new ExpandMacros(module, files, kompileOptions, false);
             termContext.setKOREtoBackendKILConverter(converter);
             Term backendKil = converter.convert(macroExpander.expand(resolveCasts.resolve(k))).evaluate(termContext);
@@ -181,7 +181,7 @@ public class InitializeRewriter implements Function<Module, Rewriter> {
             rewritingContext.stateLog.open("search-" + Integer.toString(Math.abs(initialConfiguration.hashCode())));
             TermContext termContext = TermContext.builder(rewritingContext).freshCounter(initCounterValue).build();
             KOREtoBackendKIL converter = new KOREtoBackendKIL(module, definition, termContext.global(), false);
-            ResolveSemanticCasts resolveCasts = new ResolveSemanticCasts(true);
+            ResolveSemanticCasts resolveCasts = new ResolveSemanticCasts(true, false);
             ExpandMacros macroExpander = new ExpandMacros(module, files, kompileOptions, false);
             termContext.setKOREtoBackendKILConverter(converter);
             Term javaTerm = converter.convert(macroExpander.expand(resolveCasts.resolve(initialConfiguration))).evaluate(termContext);

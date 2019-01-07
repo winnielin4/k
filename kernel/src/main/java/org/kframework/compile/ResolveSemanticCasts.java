@@ -27,11 +27,12 @@ import static org.kframework.kore.KORE.*;
 public class ResolveSemanticCasts {
 
     private final boolean skipSortPredicates;
+    private final boolean exceptKResult;
     private Set<KApply> casts = new HashSet<>();
     private Map<KVariable, KVariable> varToTypedVar = new HashMap<>();
 
-    public ResolveSemanticCasts(boolean skipSortPredicates) {
-
+    public ResolveSemanticCasts(boolean skipSortPredicates, boolean exceptKResult) {
+        this.exceptKResult = exceptKResult;
         this.skipSortPredicates = skipSortPredicates;
     }
 
@@ -69,27 +70,30 @@ public class ResolveSemanticCasts {
     }
 
     K addSideCondition(K requires, boolean macro) {
-        if (skipSortPredicates || macro)
-            return requires;
-        else {
-            Optional<KApply> sideCondition = casts.stream().map(k -> {
-                return new TransformK() {
-                    @Override
-                    public K apply(KVariable k) {
-                        if (varToTypedVar.containsKey(k)) {
-                            return varToTypedVar.get(k);
-                        }
-                        return k;
-                    }
-                }.apply(k);
-            }).map(k -> KApply(KLabel("is" + getSortNameOfCast((KApply) k)), transform(k))).reduce(BooleanUtils::and);
-            if (!sideCondition.isPresent()) {
-                return requires;
-            } else if (requires.equals(BooleanUtils.TRUE) && sideCondition.isPresent()) {
-                return sideCondition.get();
+        if (skipSortPredicates || macro) {
+            if (exceptKResult) {
+                casts.removeIf(k -> !k.klabel().name().equals("#SemanticCastToKResult"));
             } else {
-                return BooleanUtils.and(sideCondition.get(), requires);
+                casts.clear();
             }
+        }
+        Optional<KApply> sideCondition = casts.stream().map(k -> {
+            return new TransformK() {
+                @Override
+                public K apply(KVariable k) {
+                    if (varToTypedVar.containsKey(k)) {
+                        return varToTypedVar.get(k);
+                    }
+                    return k;
+                }
+            }.apply(k);
+        }).map(k -> KApply(KLabel("is" + getSortNameOfCast((KApply) k)), transform(k))).reduce(BooleanUtils::and);
+        if (!sideCondition.isPresent()) {
+            return requires;
+        } else if (requires.equals(BooleanUtils.TRUE) && sideCondition.isPresent()) {
+            return sideCondition.get();
+        } else {
+            return BooleanUtils.and(sideCondition.get(), requires);
         }
     }
 

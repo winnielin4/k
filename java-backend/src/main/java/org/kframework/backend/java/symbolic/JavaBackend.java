@@ -112,7 +112,7 @@ public class JavaBackend implements Backend {
     public Function<Module, Module> specificationSteps(Definition def) {
         BiFunction<Module, K, K> convertCellCollections = (Module m, K k) -> new ConvertDataStructureToLookup(m, false).convert(k);
         return m -> ModuleTransformer.fromSentenceTransformer(new ResolveAnonVar()::resolve, "resolve anonymous varaibles")
-                .andThen(ModuleTransformer.fromSentenceTransformer(s -> new ResolveSemanticCasts(kompileOptions.backend.equals(Backends.JAVA)).resolve(s), "resolve semantic casts"))
+                .andThen(ModuleTransformer.fromSentenceTransformer(s -> new ResolveSemanticCasts(kompileOptions.backend.equals(Backends.JAVA), false).resolve(s), "resolve semantic casts"))
                 .andThen(AddImplicitComputationCell::transformModule)
                 .andThen(ConcretizeCells::transformModule)
                 .andThen(ModuleTransformer.fromRuleBodyTransformer(RewriteToTop::bubbleRewriteToTopInsideCells, "bubble out rewrites below cells"))

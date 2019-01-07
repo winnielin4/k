@@ -111,7 +111,7 @@ public class KoreBackend implements Backend {
         DefinitionTransformer resolveHeatCoolAttribute = DefinitionTransformer.fromSentenceTransformer(new ResolveHeatCoolAttribute(new HashSet<>(kompileOptions.transition), heatCoolConditions)::resolve, "resolving heat and cool attributes");
         DefinitionTransformer resolveAnonVars = DefinitionTransformer.fromSentenceTransformer(new ResolveAnonVar()::resolve, "resolving \"_\" vars");
         DefinitionTransformer resolveSemanticCasts =
-                DefinitionTransformer.fromSentenceTransformer(new ResolveSemanticCasts(true)::resolve, "resolving semantic casts");
+                DefinitionTransformer.fromSentenceTransformer(new ResolveSemanticCasts(true, true)::resolve, "resolving semantic casts");
         DefinitionTransformer resolveFun = DefinitionTransformer.from(new ResolveFun()::resolve, "resolving #fun");
         DefinitionTransformer generateSortPredicateSyntax = DefinitionTransformer.from(new GenerateSortPredicateSyntax()::gen, "adding sort predicate productions");
         DefinitionTransformer subsortKItem = DefinitionTransformer.from(Kompile::subsortKItem, "subsort all sorts to KItem");
@@ -148,7 +148,7 @@ public class KoreBackend implements Backend {
                 new ResolveAnonVar()::resolve,
                 "resolving \"_\" vars");
         ModuleTransformer resolveSemanticCasts = ModuleTransformer.fromSentenceTransformer(
-                new ResolveSemanticCasts(true)::resolve,
+                new ResolveSemanticCasts(true, true)::resolve,
                 "resolving semantic casts");
         ModuleTransformer subsortKItem = ModuleTransformer.from(Kompile::subsortKItem, "subsort all sorts to KItem");
         ModuleTransformer addImplicitComputationCell = ModuleTransformer.fromSentenceTransformer(

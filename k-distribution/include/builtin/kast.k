@@ -57,7 +57,7 @@ module KSEQ
   syntax KBott ::= ".K"      [klabel(#EmptyK), symbol, unparseAvoid]
                  | "."       [klabel(#EmptyK), symbol]
                  | ".::K"    [klabel(#EmptyK), symbol, unparseAvoid]
-  syntax K ::= K "~>" K  [klabel(#KSequence), left, assoc, unit(#EmptyK), symbol]
+  syntax K ::= K "~>" K  [klabel(#KSequence), left, assoc, unit(#EmptyK), symbol, format(   %1%n%2 %3)]
   syntax left #KSequence
   syntax K     ::= "(" K ")"    [bracket, poly(0, 1)]
 endmodule

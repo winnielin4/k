@@ -34,15 +34,12 @@ public class GeneratedTopFormat {
                 i++;
             }
             StringBuilder format = new StringBuilder();
-            if (cellPositions.size() == 1) {
+            if (cellPositions.size() > 0) {
                 format.append("%").append(cellPositions.get(0));
-            } else {
-                format.append("%1%i");
-                int j;
-                for (j = 0; j < cellPositions.size(); j++) {
-                    format.append("%n%").append(cellPositions.get(j));
-                }
-                format.append("%d%n%").append(cellPositions.get(j - 1) + 1);
+            }
+            int j;
+            for (j = 1; j < cellPositions.size(); j++) {
+                format.append("%n%").append(cellPositions.get(j));
             }
             return Production(prod.klabel(), prod.sort(), prod.items(), prod.att().add("format", format.toString()));
         }

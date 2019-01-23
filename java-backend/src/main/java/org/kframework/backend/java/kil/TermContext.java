@@ -18,7 +18,7 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public class TermContext extends JavaSymbolicObject {
 
-    private final AtomicLong counter;
+    private static AtomicLong counter;
 
     private final GlobalContext global;
 
@@ -32,7 +32,9 @@ public class TermContext extends JavaSymbolicObject {
 
     private TermContext(GlobalContext global, AtomicLong counter) {
         this.global = global;
-        this.counter = counter;
+        if (counter != null && this.counter == null)
+           this.counter = counter;
+
         this.initialVariables = Sets.newHashSet();
     }
 

@@ -14,6 +14,7 @@ import org.kframework.utils.file.FileUtil;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -133,7 +134,7 @@ public class Definition {
                 true,
                 false);
 
-        org.kframework.definition.Definition def = definitionParsing.parseDefinitionAndResolveBubbles(filePath, mainModuleName, mainModuleName);
+        org.kframework.definition.Definition def = definitionParsing.parseDefinitionAndResolveBubbles(filePath, mainModuleName, mainModuleName, new HashSet<>());
         return def;
     }
 }

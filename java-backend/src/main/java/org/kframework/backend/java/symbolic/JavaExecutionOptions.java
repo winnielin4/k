@@ -2,7 +2,6 @@
 package org.kframework.backend.java.symbolic;
 
 import com.beust.jcommander.Parameter;
-
 import org.kframework.backend.java.util.StateLog;
 import org.kframework.utils.inject.RequestScoped;
 import org.kframework.utils.options.BaseEnumConverter;
@@ -74,4 +73,10 @@ public final class JavaExecutionOptions {
             "log both LHS and RHS. This is the default behavior. If this option is false, only RHS will be logged, " +
             "to reduce lgo size. Used in combination with --debug-z3.", arity = 1)
     public boolean logImplicationLHS = true;
+
+    @Parameter(names = "--profile-mem-adv", description = "Show advanced memory and garbage collector statistics in the " +
+            "summary box. In addition to basic statistics, show statistics after System.gc() invocation and statistics " +
+            "for main runtime caches. " +
+            "WARNING: Execution time with this option is longer because System.gc() is invoked in 3 places.")
+    public boolean profileMemAdv = false;
 }

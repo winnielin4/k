@@ -27,8 +27,8 @@ import org.kframework.backend.java.kil.TermContext;
 import org.kframework.backend.java.kil.Variable;
 import org.kframework.backend.java.util.StateLog;
 import org.kframework.backend.java.util.FormulaContext;
-import org.kframework.backend.java.util.Profiler2;
 import org.kframework.backend.java.util.RuleSourceUtil;
+import org.kframework.backend.java.util.TimeMemoryEntry;
 import org.kframework.backend.java.utils.BitSet;
 import org.kframework.builtin.KLabels;
 import org.kframework.kore.FindK;
@@ -627,6 +627,7 @@ public class SymbolicRewriter {
         KItem targetCallData = getCell((KItem) targetTerm.term(), "<callData>");
         int branchingRemaining = global.globalOptions.branchingAllowed;
         boolean nextStepLogEnabled = false;
+        prevStats = new TimeMemoryEntry(false);
         while (!queue.isEmpty()) {
             step++;
             int v = 0;
@@ -877,7 +878,7 @@ public class SymbolicRewriter {
             System.err.print("\nEXECUTION FINISHED\n==================================\n");
         }
         System.err.format("Longest path: %d steps\n", step);
-        global.profiler.printResult();
+        global.profiler.printResult(true);
     }
 
     //map value = log format: true = pretty, false = toString()
@@ -912,6 +913,8 @@ public class SymbolicRewriter {
         }
     }
 
+    private TimeMemoryEntry prevStats;
+
     /**
      * @return whether it was actually logged
      */
@@ -936,9 +939,10 @@ public class SymbolicRewriter {
         boolean inNewStmt = global.globalOptions.logStmtsOnly && kSequence != null && inNewStmt(kSequence);
 
         if (global.globalOptions.log || forced || inNewStmt || global.globalOptions.logRulesPublic) {
-            System.err.format("\nSTEP %d v%d : %.3f s, \t\t%d MB\n===================\n",
-                    step, v, (System.currentTimeMillis() - global.profiler.getStartTime()) / 1000.,
-                    Profiler2.usedMemory());
+            TimeMemoryEntry now = new TimeMemoryEntry(false);
+            System.err.format("\nSTEP %d v%d : %s\n===================\n",
+                    step, v, global.profiler.stepLogString(now, prevStats));
+            prevStats = now;
         }
 
         boolean actuallyLogged = global.globalOptions.log || forced || inNewStmt;

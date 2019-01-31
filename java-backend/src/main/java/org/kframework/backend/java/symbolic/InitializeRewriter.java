@@ -257,7 +257,7 @@ public class InitializeRewriter implements Function<Module, Rewriter> {
                         termContext.setTopConstraint(null);
 
                         if (rewritingContext.javaExecutionOptions.cacheFunctionsOptimized) {
-                            rewritingContext.functionCache.clearCache();
+                            rewritingContext.functionCache.clear();
                         }
                         return rewriter.proveRule(r, lhs, rhs, specRules, kem);
                     })

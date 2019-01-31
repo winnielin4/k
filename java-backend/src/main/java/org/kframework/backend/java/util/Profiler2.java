@@ -1,14 +1,17 @@
 // Copyright (c) 2015-2019 K Team. All Rights Reserved.
 package org.kframework.backend.java.util;
 
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
+import org.kframework.backend.java.kil.GlobalContext;
 import org.kframework.backend.java.symbolic.ConjunctiveFormula;
-import org.kframework.main.GlobalOptions;
 import org.kframework.main.StartTimeHolder;
 import org.kframework.utils.inject.RequestScoped;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.BinaryOperator;
 import java.util.stream.Collectors;
@@ -16,15 +19,19 @@ import java.util.stream.Collectors;
 /**
  * @author Denis Bogdanas
  * Created on 23-Jul-18.
+ * <p>
+ * Reason why explicit GC times are counted separately: they are not included in any other init or execution times, nor
+ * in GC time percentage.
  */
 @RequestScoped
 public class Profiler2 {
 
-    private final long startTime;
-    private GlobalOptions globalOptions;
+    private GlobalContext context;
 
-    private long parsingTimestamp;
-    private long initTimestamp;
+    private final TimeMemoryEntry startStats;
+    private TimeMemoryEntry parsingStats;
+    private TimeMemoryEntry initStats;
+    private List<TimeMemoryEntry> cacheMeasuringStats = new ArrayList<>();
 
     public final CounterStopwatch resFuncNanoTimer = new CounterStopwatch("resolveFunction");
     public final CounterStopwatch logOverheadTimer = new CounterStopwatch("Log");
@@ -44,19 +51,22 @@ public class Profiler2 {
     }
 
     @Inject
-    public Profiler2(StartTimeHolder startTimeHolder, GlobalOptions globalOptions) {
-        this.startTime = startTimeHolder.getStartTime();
-        this.globalOptions = globalOptions;
+    public Profiler2(StartTimeHolder startTimeHolder) {
+        this.startStats = new TimeMemoryEntry(startTimeHolder.getStartTimeNano());
     }
 
-    public void printResult() {
-        long currentTimestamp = System.currentTimeMillis();
-        System.err.format("Total time:            %.3f\n", (currentTimestamp - startTime) / 1000.);
-        System.err.format("  Parsing time:        %.3f\n", (parsingTimestamp - startTime) / 1000.);
-        System.err.format("  Initialization time: %.3f\n", (initTimestamp - parsingTimestamp) / 1000.);
-        System.err.format("  Execution time:      %.3f\n\n", (currentTimestamp - initTimestamp) / 1000.);
+    public void setContext(GlobalContext context) {
+        this.context = context;
+    }
 
-        System.err.format("Init+Execution time:    %.3f\n", (currentTimestamp - parsingTimestamp) / 1000.);
+    public void printResult(boolean afterExecution) {
+        TimeMemoryEntry currentStats = afterExecution ? new TimeMemoryEntry(context.javaExecutionOptions.profileMemAdv)
+                                                      : initStats;
+        printStats(currentStats, afterExecution);
+
+        TimeMemoryEntry[] intermediate = getIntermediateStats(initStats);
+        System.err.format("\n\nInit+Execution time:    %8.3f s\n",
+                currentStats.timeDiff(parsingStats, intermediate));
         if (queryBuildTimer.getCount() > 0) {
             System.err.format("  query build time:     %s\n", queryBuildTimer);
         }
@@ -68,10 +78,13 @@ public class Profiler2 {
 
         System.err.format("  resolveFunction time: %s\n", resFuncNanoTimer);
         if (logOverheadTimer.getCount() > 0) {
-            System.err.format("  log time:             %s\n\n", logOverheadTimer);
+            System.err.format("  log time:             %s\n", logOverheadTimer);
         }
 
-        printMemoryUsage();
+        if (afterExecution) {
+            System.err.format("\nMax memory : %d MB\n", Runtime.getRuntime().maxMemory() / (1024 * 1024));
+        }
+        printCacheStats(currentStats, afterExecution);
 
         System.err.format("resolveFunction top-level uncached: %d\n", countResFuncTopUncached);
         int countCached = resFuncNanoTimer.getCount() - countResFuncTopUncached;
@@ -81,8 +94,8 @@ public class Profiler2 {
         System.err.format("resolveFunction recursive uncached: %d\n", countResFuncRecursiveUncached);
 
         if (ConjunctiveFormula.impliesStopwatch.getCount() > 0) {
-            System.err.format("\nimpliesSMT time:    %s\n", ConjunctiveFormula.impliesStopwatch);
-            System.err.format("impliesSMT count: %s\n", ConjunctiveFormula.impliesStopwatch.getCount());
+            System.err.format("\nimpliesSMT time :    %s\n", ConjunctiveFormula.impliesStopwatch);
+            System.err.format("impliesSMT count:    %s\n", ConjunctiveFormula.impliesStopwatch.getCount());
         }
 
         //Has some overhead. Enable from class Profiler if needed, by setting value below to true.
@@ -93,34 +106,69 @@ public class Profiler2 {
         System.err.println("==================================\n");
     }
 
-    private void printMemoryUsage() {
-        System.err.format("Used memory:                   %d MB\n", usedMemory());
-        if (globalOptions.logMemoryAfterGC) {
-            long beforeGC = System.currentTimeMillis();
-            System.gc();
-            double gcTime = (System.currentTimeMillis() - beforeGC) / 1000.;
-            System.err.format("Used memory after System.gc(): %d MB\n", usedMemory());
-            System.err.format("\tSystem.gc() time: %.3f\n", gcTime);
+    private void printStats(TimeMemoryEntry currentStats, boolean afterExecution) {
+        System.err.format("Stats for each phase, time, used memory, implicit main GC time percentage:");
+        String postGcPrefix = ",\t\t post-gc mem: ";
+        TimeMemoryEntry[] intermediateForTotal = afterExecution ? getIntermediateStats(parsingStats, initStats)
+                                                                : getIntermediateStats(parsingStats);
+        System.err.format("\nTotal                 : %s%s", currentStats.logString(startStats, intermediateForTotal),
+                currentStats.postGCLogString(postGcPrefix, intermediateForTotal));
+        System.err.format("\n  Parsing             : %s%s", parsingStats.logString(startStats),
+                parsingStats.postGCLogString(postGcPrefix));
+        System.err.format("\n  Init                : %s%s", initStats.logString(parsingStats),
+                initStats.postGCLogString(postGcPrefix));
+        if (afterExecution) {
+            System.err.format("\n  Execution           : %s%s",
+                    currentStats.logString(initStats, getIntermediateStats()),
+                    currentStats.postGCLogString(postGcPrefix, getIntermediateStats()));
         }
-        System.err.println();
     }
 
-    public static long usedMemory() {
-        return (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / (1024 * 1024);
+    private void printCacheStats(TimeMemoryEntry currentStats, boolean afterExecution) {
+        //Measure cache after initialization phase only if it's going to be cleared by --cache-func-optimized.
+        if (context.javaExecutionOptions.profileMemAdv &&
+                (afterExecution || context.javaExecutionOptions.cacheFunctionsOptimized)) {
+            int funcCacheSize = context.functionCache.size();
+            int formulaCacheSize = context.formulaCache.size();
+            int toStringCacheSize = context.toStringCache.size();
+            context.functionCache.clear();
+            TimeMemoryEntry noFuncCache = new TimeMemoryEntry(true);
+            System.err.format("Function cache size: %5d MB, %8d entries\n",
+                    currentStats.usedPostGCMemory() - noFuncCache.usedPostGCMemory(), funcCacheSize);
+
+            context.formulaCache.clear();
+            TimeMemoryEntry noFormulaCache = new TimeMemoryEntry(true);
+            System.err.format("Formula cache size : %5d MB, %8d entries\n",
+                    noFuncCache.usedPostGCMemory() - noFormulaCache.usedPostGCMemory(), formulaCacheSize);
+
+            context.toStringCache.clear();
+            TimeMemoryEntry noToStringCache = new TimeMemoryEntry(true);
+            System.err.format("toString cache size: %5d MB, %8d entries\n",
+                    noFormulaCache.usedPostGCMemory() - noToStringCache.usedPostGCMemory(), toStringCacheSize);
+            System.out.println();
+
+            cacheMeasuringStats = Arrays.asList(noFuncCache, noFormulaCache, noToStringCache);
+        }
+    }
+
+    private TimeMemoryEntry[] getIntermediateStats(TimeMemoryEntry... mainStats) {
+        ArrayList<TimeMemoryEntry> list = Lists.newArrayList(mainStats);
+        list.addAll(cacheMeasuringStats);
+        return list.toArray(new TimeMemoryEntry[]{});
     }
 
     public void logParsingTime() {
-        parsingTimestamp = System.currentTimeMillis();
-        System.err.format("\nParsing finished: %.3f s\n", (parsingTimestamp - startTime) / 1000.);
+        parsingStats = new TimeMemoryEntry(context.javaExecutionOptions.profileMemAdv);
+        System.err.format("\nParsing finished: %8.3f s\n", parsingStats.timeDiff(startStats));
     }
 
     public void logInitTime() {
-        initTimestamp = System.currentTimeMillis();
+        initStats = new TimeMemoryEntry(context.javaExecutionOptions.profileMemAdv);
         System.err.println("\nInitialization finished\n==================================");
-        printResult();
+        printResult(false);
     }
 
-    public long getStartTime() {
-        return startTime;
+    public String stepLogString(TimeMemoryEntry currentStats, TimeMemoryEntry prevStats) {
+        return currentStats.stepLogString(initStats, prevStats);
     }
 }

@@ -70,6 +70,7 @@ public class GlobalContext implements Serializable {
         this.kItemOps = new KItemOperations(stage, javaExecutionOptions.deterministicFunctions, kem, this::builtins, globalOptions);
         this.stage = stage;
         this.profiler = profiler;
+        profiler.setContext(this);
     }
 
     @Inject

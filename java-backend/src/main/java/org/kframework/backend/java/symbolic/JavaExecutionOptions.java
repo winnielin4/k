@@ -88,6 +88,16 @@ public final class JavaExecutionOptions {
     public List<String> logCells = Arrays.asList("k", "output", "statusCode", "localMem", "pc", "gas", "wordStack",
             "callData", "accounts");
 
+    @Parameter(names = "--debug-steps", variableArity = true, description = "Specify exact steps for which --debug option should be enabled")
+    public List<String> debugSteps = new ArrayList<>();
+
+    @Parameter(names = "--debug-last-step", description = "Activate option --debug for last step. Useful to debug final implication.")
+    public boolean debugLastStep = false;
+
+    @Parameter(names="--debug-spec-rules", description="Enable --debug for steps where a specification rule is applied. " +
+            "This may be useful because during spec rules new constraints are sometimes added to the path condition.")
+    public boolean debugSpecRules = false;
+
     @Parameter(names="--log-rules", description="Log applied rules.")
     public boolean logRules = false;
 

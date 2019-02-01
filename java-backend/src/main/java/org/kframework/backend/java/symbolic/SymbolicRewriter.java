@@ -640,6 +640,14 @@ public class SymbolicRewriter {
                 //if <k> cell matches the target <k>, we consider this state final.
                 boolean kMatchesTarget = termK.matchesTermModuloSubstitutions(targetK);
 
+                boolean oldDebug =  global.javaExecutionOptions.debugZ3;
+
+                if (kMatchesTarget && global.javaExecutionOptions.debugLastStep
+                        || global.javaExecutionOptions.debugSteps.contains(String.valueOf(step))) {
+                    global.javaExecutionOptions.debugZ3 = true;
+                    global.javaExecutionOptions.log = true;
+                }
+
                 boolean alreadyLogged = logStep(step, v, targetCallData, term,
                         step == 1 || kMatchesTarget, false);
                 if (kMatchesTarget) {
@@ -693,6 +701,12 @@ public class SymbolicRewriter {
                         // re-running constraint generation again for debug purposes
                         if (global.javaExecutionOptions.logBasic) {
                             System.err.println("\nApplying specification rule\n=========================\n");
+                        }
+                        if (global.javaExecutionOptions.debugSpecRules && !global.globalOptions.debug) {
+                            boolean oldDebug2 = global.globalOptions.debug;
+                            global.globalOptions.debug = true;
+                            applySpecRules(term, specRules);
+                            global.globalOptions.debug = oldDebug2;
                         }
                         if (visited.add(result)) {
                             nextQueue.add(result);
@@ -755,6 +769,7 @@ public class SymbolicRewriter {
                         nextQueue.add(result);
                     }
                 }
+                global.javaExecutionOptions.debugZ3 = oldDebug;
             }
 
             /* swap the queues */

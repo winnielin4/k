@@ -364,8 +364,17 @@ public class FastRuleMatcher {
         } else if (subject instanceof BuiltinSet && pattern instanceof BuiltinSet) {
             return unifySet((BuiltinSet) subject, (BuiltinSet) pattern, ruleMask, path);
         } else {
-            assert subject instanceof KItem || subject instanceof BuiltinList || subject instanceof Token || subject instanceof BuiltinMap : "unexpected class at matching: " + subject.getClass();
-            assert pattern instanceof KItem || pattern instanceof BuiltinList || pattern instanceof Token : "unexpected class at matching: " + pattern.getClass();
+            try {
+                assert subject instanceof KItem || subject instanceof BuiltinList || subject instanceof Token ||
+                        subject instanceof BuiltinMap : "unexpected class at matching: " + subject.getClass();
+                assert pattern instanceof KItem || pattern instanceof BuiltinList || pattern instanceof Token :
+                        "unexpected class at matching: " + pattern.getClass();
+            } catch (AssertionError e) {
+                System.err.println("\nAssertionError while matching subject:\n========================\n");
+                System.err.println(subject); //prettyPrint throws exception
+                System.err.println("\n to pattern:\n------------------------\n" + pattern);
+                throw e;
+            }
             return empty;
         }
     }

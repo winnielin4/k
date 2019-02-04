@@ -45,7 +45,7 @@ public class KProve {
     public int run(KProveOptions options, CompiledDefinition compiledDefinition, Backend backend, Function<Definition, Rewriter> rewriterGenerator) {
         Tuple2<Definition, Module> compiled = getProofDefinition(options.specFile(files), options.defModule, options.specModule, compiledDefinition, backend, files, kem, sw);
         Rewriter rewriter = rewriterGenerator.apply(compiled._1());
-        Module specModule = compiled._2();
+        Module specModule = this.concretizeSpecs(compiled._2(), options);
 
         K results = rewriter.prove(specModule);
         int exit;
@@ -107,5 +107,9 @@ public class KProve {
 
     private static Module spliceModule(Module specModule, Definition kompiledDefinition) {
         return ModuleTransformer.from(mod -> kompiledDefinition.getModule(mod.name()).isDefined() ? kompiledDefinition.getModule(mod.name()).get() : mod, "splice imports of specification module").apply(specModule);
+    }
+
+    private static Module concretizeSpecs(Module specModule, KProveOptions kproveOptions) {
+        return specModule;
     }
 }

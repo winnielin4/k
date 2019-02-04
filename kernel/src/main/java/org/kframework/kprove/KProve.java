@@ -18,10 +18,15 @@ import org.kframework.utils.errorsystem.KExceptionManager;
 import org.kframework.utils.file.FileUtil;
 import scala.Option;
 import scala.Tuple2;
+import scala.collection.Set;
+import scala.collection.JavaConverters;
 
 import java.io.File;
 import java.util.*;
+import java.util.stream.Collectors;
 import java.util.function.Function;
+
+import static org.kframework.Collections.*;
 
 
 /**
@@ -110,6 +115,14 @@ public class KProve {
     }
 
     private static Module concretizeSpecs(Module specModule, KProveOptions kproveOptions) {
-        return specModule;
+        Set<Sentence> newSentences = JavaConverters.asScalaSet(stream(specModule.localSentences())
+                                    .map(s -> s instanceof Rule ? concretizeRule((Rule) s, kproveOptions.concretizeSorts, kproveOptions.concreteInstances) : s)
+                                    .collect(Collectors.toSet()));
+
+        return new Module(specModule.name(), specModule.imports(), newSentences, specModule.att());
+    }
+
+    private static Rule concretizeRule(Rule rule, List<String> concretizeSorts, int concretizeInstances) {
+        return rule;
     }
 }

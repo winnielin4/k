@@ -17,6 +17,7 @@ import org.kframework.kore.KToken;
 import org.kframework.kore.KVariable;
 import org.kframework.kore.Sort;
 import org.kframework.kore.VisitK;
+import org.kframework.kore.TransformK;
 import org.kframework.rewriter.Rewriter;
 import org.kframework.unparser.KPrint;
 import org.kframework.utils.Stopwatch;
@@ -139,7 +140,6 @@ public class KProve {
     }
 
     private static final Random randomNumber = new Random();
-    private static final int maxRandInt = 1000000000;
 
     private static Set<Rule> concretizeRule(Rule rule, List<String> concretizeSorts, int concretizeInstances) {
         Set<Rule> newRules = new HashSet<Rule>();
@@ -150,14 +150,27 @@ public class KProve {
                     throw KEMException.criticalError("Unsupported sort for concretization. Supported sorts are [Int|Bool], found: " + sortName);
                 }
                 for (KVariable var: getLHSVariablesOfSort(rule.body(), sortName)) {
-                    if      (sortName.equals("Int"))  ruleSubstitution.put(var, KToken(Integer.toString(randomNumber.nextInt(maxRandInt)), Sorts.Int()));
-                    else if (sortName.equals("Bool")) ruleSubstitution.put(var, randomNumber.nextInt(1) == 0 ? BooleanUtils.FALSE : BooleanUtils.TRUE);
+                    if      (sortName.equals("Int"))  ruleSubstitution.put(var, KToken(Integer.toString(randomNumber.nextInt(10)), Sorts.Int()));
+                    else if (sortName.equals("Bool")) ruleSubstitution.put(var, randomNumber.nextInt(2) == 0 ? BooleanUtils.FALSE : BooleanUtils.TRUE);
                 }
             }
-            System.out.println("Substitution: " + ruleSubstitution.toString());
-            newRules.add(rule);
+            newRules.add(applySubstitution(rule, ruleSubstitution));
         }
         return newRules;
+    }
+
+    private static Rule applySubstitution(Rule rule, Map<KVariable, K> subst) {
+        TransformK substAll = new TransformK() {
+            @Override
+            public K apply(KVariable kvar) {
+                if (subst.containsKey(kvar)) {
+                    return subst.get(kvar);
+                } else {
+                    return kvar;
+                }
+            }
+        };
+        return new Rule(substAll.apply(rule.body()), substAll.apply(rule.requires()), substAll.apply(rule.ensures()), rule.att()); 
     }
 
     private static Set<KVariable> getLHSVariablesOfSort(K term, String sortName) {

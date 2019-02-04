@@ -15,6 +15,7 @@ import org.kframework.utils.options.OuterParsingOptions;
 import org.kframework.utils.options.SMTOptions;
 
 import java.io.File;
+import java.util.Collections;
 import java.util.List;
 
 @RequestScoped
@@ -55,4 +56,10 @@ public class KProveOptions {
 
     @Parameter(names="--depth", description="The maximum number of computational steps to prove")
     public Integer depth;
+
+    @Parameter(names="--concretize-sorts", description="Comma separated sorts to concretize in proof goals. Supported sorts: Int, Bool")
+    public List<String> concretizeSorts = Collections.emptyList();
+
+    @Parameter(names="--concrete-instances", description="Number of different concretized instances to run proofs with")
+    public int concreteInstances = 10;
 }

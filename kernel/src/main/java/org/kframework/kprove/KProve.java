@@ -18,7 +18,6 @@ import org.kframework.utils.errorsystem.KExceptionManager;
 import org.kframework.utils.file.FileUtil;
 import scala.Option;
 import scala.Tuple2;
-import scala.collection.Set;
 import scala.collection.JavaConverters;
 
 import java.io.File;
@@ -115,14 +114,27 @@ public class KProve {
     }
 
     private static Module concretizeSpecs(Module specModule, KProveOptions kproveOptions) {
-        Set<Sentence> newSentences = JavaConverters.asScalaSet(stream(specModule.localSentences())
-                                    .map(s -> s instanceof Rule ? concretizeRule((Rule) s, kproveOptions.concretizeSorts, kproveOptions.concreteInstances) : s)
-                                    .collect(Collectors.toSet()));
+        if (kproveOptions.concretizeSorts.size() == 0 || kproveOptions.concreteInstances < 1) return specModule;
 
-        return new Module(specModule.name(), specModule.imports(), newSentences, specModule.att());
+        Set<Sentence> newSentences = new HashSet<Sentence>();
+        for (Sentence sent: JavaConverters.seqAsJavaList(specModule.localSentences().toSeq())) {
+            if (! (sent instanceof Rule)) {
+                newSentences.add(sent);
+            } else {
+                for (Rule rule: concretizeRule((Rule) sent, kproveOptions.concretizeSorts, kproveOptions.concreteInstances)) {
+                    newSentences.add(rule);
+                }
+            }
+        }
+
+        return new Module(specModule.name(), specModule.imports(), JavaConverters.asScalaSet(newSentences), specModule.att());
     }
 
-    private static Rule concretizeRule(Rule rule, List<String> concretizeSorts, int concretizeInstances) {
-        return rule;
+    private static Set<Rule> concretizeRule(Rule rule, List<String> concretizeSorts, int concretizeInstances) {
+        Set<Rule> newRules = new HashSet<Rule>();
+        for (int i = 0; i < concretizeInstances; i++) {
+            newRules.add(rule);
+        }
+        return newRules;
     }
 }

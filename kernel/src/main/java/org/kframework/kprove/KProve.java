@@ -10,6 +10,10 @@ import org.kframework.kompile.CompiledDefinition;
 import org.kframework.kompile.Kompile;
 import org.kframework.kore.K;
 import org.kframework.kore.KApply;
+import org.kframework.kore.KRewrite;
+import org.kframework.kore.KVariable;
+import org.kframework.kore.Sort;
+import org.kframework.kore.VisitK;
 import org.kframework.rewriter.Rewriter;
 import org.kframework.unparser.KPrint;
 import org.kframework.utils.Stopwatch;
@@ -133,8 +137,31 @@ public class KProve {
     private static Set<Rule> concretizeRule(Rule rule, List<String> concretizeSorts, int concretizeInstances) {
         Set<Rule> newRules = new HashSet<Rule>();
         for (int i = 0; i < concretizeInstances; i++) {
+            for (String sortName: concretizeSorts) {
+                for (KVariable var: getLHSVariablesOfSort(rule.body(), sortName)) {
+                    System.out.println("Found variable of sort " + sortName + ": " + var.toString());
+                }
+            }
             newRules.add(rule);
         }
         return newRules;
+    }
+
+    private static Set<KVariable> getLHSVariablesOfSort(K term, String sortName) {
+        Set<KVariable> vars = new HashSet<KVariable>();
+        new VisitK() {
+            @Override
+            public void apply(KRewrite krw) {
+                super.apply(krw.left());
+            }
+
+            @Override
+            public void apply(KVariable v) {
+                if (v.att().get(Sort.class).name().equals(sortName)) {
+                    vars.add(v);
+                }
+            }
+        }.apply(term);
+        return vars;
     }
 }

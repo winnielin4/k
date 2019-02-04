@@ -3,6 +3,8 @@ package org.kframework.kprove;
 
 import com.google.inject.Inject;
 import org.apache.commons.io.FilenameUtils;
+import org.kframework.builtin.BooleanUtils;
+import org.kframework.builtin.Sorts;
 import org.kframework.compile.*;
 import org.kframework.definition.*;
 import org.kframework.definition.Module;
@@ -11,6 +13,7 @@ import org.kframework.kompile.Kompile;
 import org.kframework.kore.K;
 import org.kframework.kore.KApply;
 import org.kframework.kore.KRewrite;
+import org.kframework.kore.KToken;
 import org.kframework.kore.KVariable;
 import org.kframework.kore.Sort;
 import org.kframework.kore.VisitK;
@@ -30,6 +33,7 @@ import java.util.stream.Collectors;
 import java.util.function.Function;
 
 import static org.kframework.Collections.*;
+import static org.kframework.kore.KORE.KToken;
 
 
 /**
@@ -134,14 +138,23 @@ public class KProve {
         return new Module(specModule.name(), specModule.imports(), JavaConverters.asScalaSet(newSentences), specModule.att());
     }
 
+    private static final Random randomNumber = new Random();
+    private static final int maxRandInt = 1000000000;
+
     private static Set<Rule> concretizeRule(Rule rule, List<String> concretizeSorts, int concretizeInstances) {
         Set<Rule> newRules = new HashSet<Rule>();
         for (int i = 0; i < concretizeInstances; i++) {
+            HashMap<KVariable, K> ruleSubstitution = new HashMap<KVariable, K>();
             for (String sortName: concretizeSorts) {
+                if (! (sortName.equals("Int") || sortName.equals("Bool"))) {
+                    throw KEMException.criticalError("Unsupported sort for concretization. Supported sorts are [Int|Bool], found: " + sortName);
+                }
                 for (KVariable var: getLHSVariablesOfSort(rule.body(), sortName)) {
-                    System.out.println("Found variable of sort " + sortName + ": " + var.toString());
+                    if      (sortName.equals("Int"))  ruleSubstitution.put(var, KToken(Integer.toString(randomNumber.nextInt(maxRandInt)), Sorts.Int()));
+                    else if (sortName.equals("Bool")) ruleSubstitution.put(var, randomNumber.nextInt(1) == 0 ? BooleanUtils.FALSE : BooleanUtils.TRUE);
                 }
             }
+            System.out.println("Substitution: " + ruleSubstitution.toString());
             newRules.add(rule);
         }
         return newRules;

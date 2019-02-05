@@ -119,7 +119,7 @@ module MAP
   syntax KItem ::= Map "[" KItem "]" "orDefault" KItem      [function, functional, hook(MAP.lookupOrDefault), klabel(Map:lookupOrDefault)]
 
   /*@ Update a Map in form of  of keys and values: */
-  syntax Map ::= Map "[" KItem "<-" KItem "]"           [function, functional, hook(MAP.update), prefer]
+  syntax Map ::= Map "[" KItem "<-" KItem "]"           [function, functional, hook(MAP.update), klabel(mapUpdate), prefer]
 
   /*@ Remove key/value pair associated with the key from map? */
   syntax Map ::= Map "[" KItem "<-" "undef" "]"     [function, functional, hook(MAP.remove), klabel(_[_<-undef]), symbol]

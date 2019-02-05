@@ -12,6 +12,7 @@ import org.kframework.backend.java.builtins.BoolToken;
 import org.kframework.backend.java.builtins.FreshOperations;
 import org.kframework.backend.java.compile.KOREtoBackendKIL;
 import org.kframework.backend.java.kil.BuiltinList;
+import org.kframework.backend.java.kil.BuiltinMap;
 import org.kframework.backend.java.kil.ConstrainedTerm;
 import org.kframework.backend.java.kil.Definition;
 import org.kframework.backend.java.kil.GlobalContext;
@@ -608,7 +609,8 @@ public class SymbolicRewriter {
         boolean guarded = false;
         int step = 0;
 
-        global.javaExecutionOptions.logBasic |= global.javaExecutionOptions.log;
+        global.javaExecutionOptions.logStmtsOnly |= global.javaExecutionOptions.log;
+        global.javaExecutionOptions.logBasic |= global.javaExecutionOptions.logStmtsOnly;
         global.globalOptions.verbose |= global.javaExecutionOptions.logBasic;
         global.javaExecutionOptions.debugZ3Queries |= global.globalOptions.debug;
         global.javaExecutionOptions.debugZ3 |= global.javaExecutionOptions.debugZ3Queries;
@@ -619,6 +621,7 @@ public class SymbolicRewriter {
             System.out.println("\nTarget term\n=====================\n");
             System.out.println(targetTerm);
         }
+        KItem targetCallData = getCell((KItem) targetTerm.term(), "<callData>");
         int branchingRemaining = global.javaExecutionOptions.branchingAllowed;
         boolean nextStepLogEnabled = false;
         boolean originalLog = global.javaExecutionOptions.log;
@@ -637,20 +640,20 @@ public class SymbolicRewriter {
                 //if <k> cell matches the target <k>, we consider this state final.
                 boolean kMatchesTarget = termK.matchesTermModuloSubstitutions(targetK);
 
-                boolean alreadyLogged = logStep(step, v, term,
+                boolean alreadyLogged = logStep(step, v, targetCallData, term,
                         step == 1 || kMatchesTarget, false);
                 if (kMatchesTarget) {
                     if (term.implies(targetTerm, rule, step > 1)) {
                         global.stateLog.log(StateLog.LogEvent.REACHPROVED, term.term(), term.constraint());
                         if (global.javaExecutionOptions.logBasic) {
-                            logStep(step, v, term, true, alreadyLogged);
+                            logStep(step, v, targetCallData, term, true, alreadyLogged);
                             System.out.println("\n============\nStep " + step + ": eliminated!\n============\n");
                         }
                         successPaths++;
                         continue;
                     } else if (!initKEqualsTargetK) {
                         //Kprove customization: if <k> matches target <k>, further evaluation is probably useless. Halting.
-                        logStep(step, v, term, global.javaExecutionOptions.logBasic, alreadyLogged);
+                        logStep(step, v, targetCallData, term, global.javaExecutionOptions.logBasic, alreadyLogged);
                         System.out.println("Halt! Terminating branch.");
                         proofResults.add(term);
                         continue;
@@ -686,7 +689,7 @@ public class SymbolicRewriter {
                     ConstrainedTerm result = applySpecRules(term, specRules);
                     if (result != null) {
                         nextStepLogEnabled = true;
-                        logStep(step, v, term, true, alreadyLogged);
+                        logStep(step, v, targetCallData, term, true, alreadyLogged);
                         // re-running constraint generation again for debug purposes
                         if (global.javaExecutionOptions.logBasic) {
                             System.err.println("\nApplying specification rule\n=========================\n");
@@ -708,7 +711,7 @@ public class SymbolicRewriter {
                     // DISABLE EXCEPTION CHECKSTYLE
                 } catch (Throwable e) {
                     // ENABLE EXCEPTION CHECKSTYLE
-                    logStep(step, v, term, true, alreadyLogged);
+                    logStep(step, v, targetCallData, term, true, alreadyLogged);
                     System.out.println("\n\nTerm throwing exception\n============================\n\n");
                     //KProve.prettyPrint(term.term());
                     System.out.println(term.term());
@@ -719,7 +722,7 @@ public class SymbolicRewriter {
                     throw e;
                 }
                 if (results.isEmpty()) {
-                    logStep(step, v, term, true, alreadyLogged);
+                    logStep(step, v, targetCallData, term, true, alreadyLogged);
                     System.out.println("\nStep above: " + step + ", evaluation ended with no successors.");
                     /* final term */
                     proofResults.add(term);
@@ -727,7 +730,7 @@ public class SymbolicRewriter {
 
                 if (results.size() > 1) {
                     nextStepLogEnabled = true;
-                    logStep(step, v, term, true, alreadyLogged);
+                    logStep(step, v, targetCallData, term, true, alreadyLogged);
                     if (branchingRemaining == 0) {
                         System.out.println("\nHalt on branching!\n=====================\n");
 
@@ -827,19 +830,32 @@ public class SymbolicRewriter {
     /**
      * @return whether it was actually logged
      */
-    private boolean logStep(int step, int v, ConstrainedTerm term, boolean forced, boolean alreadyLogged) {
+    private boolean logStep(int step, int v, KItem targetCallData, ConstrainedTerm term, boolean forced, boolean alreadyLogged) {
         if (alreadyLogged || !global.javaExecutionOptions.logBasic) {
             return false;
         }
         global.profiler.logOverheadTimer.start();
         KItem top = (KItem) term.term();
 
-        if (global.javaExecutionOptions.log || forced || global.javaExecutionOptions.logRulesPublic) {
+        KItem localMem = getCell(top, "<localMem>");
+        K localMemMap = localMem != null ? localMem.klist().items().get(0) : null;
+
+        if (global.javaExecutionOptions.haltOnLocalMemNonMap
+                && !(localMemMap instanceof BuiltinMap || localMemMap instanceof Variable)) {
+            forced = true;
+        }
+
+        KItem k = getCell(top, "<k>");
+        Term kContent = k != null ? ((KList) k.klist()).get(0) : null;
+        BuiltinList kSequence = kContent instanceof BuiltinList ? (BuiltinList) kContent : null;
+        boolean inNewStmt = global.javaExecutionOptions.logStmtsOnly && kSequence != null && inNewStmt(kSequence);
+
+        if (global.javaExecutionOptions.log || forced || inNewStmt || global.javaExecutionOptions.logRulesPublic) {
             System.out.format("\nSTEP %d v%d : %.3f s \n===================\n",
                     step, v, (System.currentTimeMillis() - global.profiler.getStartTime()) / 1000.);
         }
 
-        boolean actuallyLogged = global.javaExecutionOptions.log || forced;
+        boolean actuallyLogged = global.javaExecutionOptions.log || forced || inNewStmt;
         if (actuallyLogged) {
             for(String cellName : cellsToLog.keySet()) {
                 boolean pretty = cellsToLog.get(cellName);
@@ -847,7 +863,20 @@ public class SymbolicRewriter {
                 if (cell == null) {
                     continue;
                 }
-                print(cell, pretty);
+                switch (cellName) {
+                case "callData":
+                    printCallData(targetCallData, cell, pretty);
+                    break;
+                case "accounts":
+                    printAccounts(cell, pretty);
+                    break;
+                case "localMem":
+                    printLocalMem(cell, pretty);
+                    break;
+                default:
+                    print(cell, pretty);
+                    break;
+                }
             }
 
             System.out.println("/\\");
@@ -858,6 +887,10 @@ public class SymbolicRewriter {
             }
         }
         global.profiler.logOverheadTimer.stop();
+        if (global.javaExecutionOptions.haltOnLocalMemNonMap
+                && localMem != null && !(localMemMap instanceof BuiltinMap || localMemMap instanceof Variable)) {
+            throw new RuntimeException("<localMem> non-map format, aborting.");
+        }
         return actuallyLogged;
     }
 
@@ -867,6 +900,44 @@ public class SymbolicRewriter {
         } else {
             System.out.println(toStringOrEmpty(cell));
         }
+    }
+
+    private void printCallData(KItem targetCallData, KItem callData, boolean pretty) {
+        if (targetCallData != null && callData != null && !targetCallData.equals(callData)) {
+            if (pretty) {
+                KProve.prettyPrint(callData);
+            } else {
+                String callDataStr = toStringOrEmpty(callData);
+                System.out.println(callDataStr.substring(0, Math.min(callDataStr.length(), 300)));
+            }
+        }
+    }
+
+    private void printAccounts(KItem accounts, boolean pretty) {
+        BuiltinMap accountsMap = accounts != null ? (BuiltinMap) ((KList) accounts.klist()).get(0) : null;
+        if (accountsMap != null) {
+            System.out.println("accounts: " + accountsMap.size());
+            for (Map.Entry<Term, Term> acct : accountsMap.getEntries().entrySet()) {
+                Term acctID = acct.getKey();
+                KItem storage = getCell((KItem) acct.getValue(), "<storage>");
+                print(acctID, pretty);
+                print(storage, pretty);
+            }
+        }
+    }
+
+    private void printLocalMem(KItem localMem, boolean pretty) {
+        K localMemMap = localMem != null ? localMem.klist().items().get(0) : null;
+        System.out.println("<localMem>");
+
+        if (!global.javaExecutionOptions.haltOnLocalMemNonMap || localMemMap instanceof BuiltinMap) {
+            System.out.println("...");
+        } else {
+            System.out.println("\tNon-map format:");
+            System.out.print("\t");
+            print(localMemMap, pretty);
+        }
+        System.out.println("</localMem>");
     }
 
     private String toStringOrEmpty(Object o) {
@@ -888,6 +959,11 @@ public class SymbolicRewriter {
             }
         }
         return null;
+    }
+
+    private boolean inNewStmt(BuiltinList kSequence) {
+        return kSequence.size() >= 2 && !kSequence.get(0).toString().startsWith("#")
+                && kSequence.get(1).toString().startsWith("#pc");
     }
 
     /**

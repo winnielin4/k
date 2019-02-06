@@ -613,11 +613,11 @@ public class SymbolicRewriter {
         boolean guarded = false;
         int step = 0;
 
-        global.javaExecutionOptions.logStmtsOnly |= global.javaExecutionOptions.log;
-        global.javaExecutionOptions.logBasic |= global.javaExecutionOptions.logStmtsOnly;
-        global.globalOptions.verbose |= global.javaExecutionOptions.logBasic;
         global.javaExecutionOptions.debugZ3Queries |= global.globalOptions.debug;
         global.javaExecutionOptions.debugZ3 |= global.javaExecutionOptions.debugZ3Queries;
+        global.javaExecutionOptions.logStmtsOnly |= global.javaExecutionOptions.log || global.javaExecutionOptions.debugZ3;
+        global.javaExecutionOptions.logBasic |= global.javaExecutionOptions.logStmtsOnly;
+        global.globalOptions.verbose |= global.javaExecutionOptions.logBasic;
         //to avoid printing initialization-phase rules
         global.javaExecutionOptions.logRulesPublic = global.javaExecutionOptions.logRules;
 

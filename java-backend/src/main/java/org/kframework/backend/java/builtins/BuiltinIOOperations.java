@@ -113,6 +113,92 @@ public class BuiltinIOOperations {
     }
 
     /**
+     * Parse with the productions given as input.
+     */
+    public static Term parseWithProds(Term prods, Token startSymbol, Token input, TermContext termContext) {
+        String tempInput = "tempInput.txt";
+        String tempGrm = "tempGrm.k";
+        List<String> tokens = new ArrayList<>();
+        tokens.add("k-light2k5.sh");
+        termContext.global().files.saveToTemp(tempGrm, prettyPrint(prods));
+        tokens.add(termContext.global().files.resolveTemp(tempGrm).getAbsolutePath());
+        tokens.add(StringUtil.unquoteKString(startSymbol.s()));
+        termContext.global().files.saveToTemp(tempInput, StringUtil.unquoteKString(input.s()));
+        tokens.add(termContext.global().files.resolveTemp(tempInput).getAbsolutePath());
+        Map<String, String> environment = new HashMap<>();
+        RunProcess.ProcessOutput output = RunProcess.execute(environment, new ProcessBuilder().directory(new File(".")), tokens.toArray(new String[tokens.size()]));
+
+        if (output.exitCode != 0) {
+            return termContext.getKOREtoBackendKILConverter().convert(KoreParser.parse(
+                    "parseError(" +
+                            "#token(" + StringUtil.enquoteCString(input.s()) + ", \"Input\"), " +
+                            "#token(" + StringUtil.enquoteCString(new String(output.stdout)) + ", \"Stdout\"), " +
+                            "#token(" + StringUtil.enquoteCString(new String(output.stderr)) + ", \"Stderr\"))"
+                    , termContext.getSource()));
+        }
+
+        byte[] kast = output.stdout != null ? output.stdout : new byte[0];
+        System.out.println(new String(kast));
+        return termContext.getKOREtoBackendKILConverter().convert(KoreParser.parse(new String(kast), termContext.getSource()));
+    }
+
+    // pretty print a list of productions to e-kore
+    private static String prettyPrint(Term prods) {
+        StringBuilder sb = new StringBuilder("module TEMPGRM\n");
+
+        ((BuiltinList) prods).children.forEach(x -> { //kSyntaxProduction
+            assert x instanceof KItem;
+            sb.append("  syntax ");
+            sb.append(((Token) ((KList) ((KItem) x).kList()).getContents().get(0)).s());
+            sb.append(" ::= ");
+            KList prd = ((KList) ((KItem) ((KList) ((KItem) x).kList()).getContents().get(1)).kList());
+            sb.append(prettyPrintkProduction(prd.get(0)));
+            sb.append(prettyPrintAttr(prd.get(1)));
+            sb.append("\n");
+        });
+
+        sb.append("endmodule\n");
+        System.out.println(sb.toString());
+        return sb.toString();
+    }
+
+    private static String prettyPrintkProduction(Term term) {
+        if (((KItem) term).klabel().name().equals("kProduction")) {
+            return  prettyPrintkProduction(((KList) ((KItem) term).kList()).get(0)) +
+                    prettyPrintkProduction(((KList) ((KItem) term).kList()).get(1));
+        } else if (((KItem) term).klabel().name().equals("terminal")) {
+            return ((Token) ((KList) ((KItem) term).kList()).get(0)).s() + " ";
+        } else if (((KItem) term).klabel().name().equals("regexTerminal")) {
+            return "r" + ((Token) ((KList) ((KItem) term).kList()).get(0)).s() + " ";
+        } else if (((KItem) term).klabel().name().equals("nonTerminal")) {
+            return ((Token) ((KList) ((KItem) term).kList()).get(0)).s() + " ";
+        } else if (((KItem) term).klabel().name().equals("listProd")) {
+            return "List{" + ((Token) ((KList) ((KItem) term).kList()).get(0)).s() + "," +
+                    ((Token) ((KList) ((KItem) term).kList()).get(1)).s() + "} ";
+        }
+        return "Unkonwon production item label: " + ((KItem) term).klabel().name();
+    }
+
+    private static String prettyPrintAttr(Term term) {
+        if (((KItem) term).klabel().name().equals("noKAttributesDeclaration")) {
+            return "";
+        } else if (((KItem) term).klabel().name().equals("kAttributesDeclaration")) {
+            return  "[" + prettyPrintAttr(((KList) ((KItem) term).kList()).get(0)) + "]";
+        } else if (((KItem) term).klabel().name().equals("nonTerminal")) {
+            return ((Token) ((KList) ((KItem) term).kList()).get(0)).s();
+        } else if (((KItem) term).klabel().name().equals("kAttributesList")) {
+            return  prettyPrintAttr(((KList) ((KItem) term).kList()).get(0)) + ", " +
+                    prettyPrintAttr(((KList) ((KItem) term).kList()).get(1));
+        } else if (((KItem) term).klabel().name().equals("tagContent")) {
+            return  ((Token) ((KList) ((KItem) term).kList()).get(0)).s() + "(" +
+                    ((Token) ((KList) ((KItem) term).kList()).get(1)).s() + ")";
+        } else if (((KItem) term).klabel().name().equals("tagSimple")) {
+            return ((Token) ((KList) ((KItem) term).kList()).get(0)).s();
+        }
+        return "Unkonwon production attribute label: " + ((KItem) term).klabel().name();
+    }
+
+    /**
      * Execute path and gives input as an argument.
      * No whitespaces allowed in path.
      * Example `cat file` or `echo string` or any external parser.

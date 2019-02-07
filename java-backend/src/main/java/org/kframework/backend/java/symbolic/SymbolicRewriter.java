@@ -599,6 +599,10 @@ public class SymbolicRewriter {
         global.stateLog.log(StateLog.LogEvent.REACHINIT,   initialTerm.term(), initialTerm.constraint());
         global.stateLog.log(StateLog.LogEvent.REACHTARGET, targetTerm.term(),  targetTerm.constraint());
 
+        KItem initialKCell = getCell((KItem) initialTerm.term(), "<k>");
+        KItem targetKCell = getCell((KItem) targetTerm.term(), "<k>");
+        boolean initKEqualsTargetK = initialKCell == null || initialKCell.equals(targetKCell);
+
         visited.add(initialTerm);
         queue.add(initialTerm);
         boolean guarded = false;
@@ -626,15 +630,36 @@ public class SymbolicRewriter {
 
             for (ConstrainedTerm term : queue) {
                 v++;
-                boolean alreadyLogged = logStep(step, v, term, step == 1, false);
-                if (term.implies(targetTerm, rule, false)) {
-                    global.stateLog.log(StateLog.LogEvent.REACHPROVED, term.term(), term.constraint());
-                    if (global.javaExecutionOptions.logBasic) {
-                        logStep(step, v, term, true, alreadyLogged);
-                        System.out.println("\n============\nStep " + step + ": eliminated!\n============\n");
+                ConstrainedTerm termK = new ConstrainedTerm(getCell((KItem) term.term(), "<k>"),
+                        term.constraint(), term.termContext());
+                ConstrainedTerm targetK = new ConstrainedTerm(getCell((KItem) targetTerm.term(), "<k>"),
+                        targetTerm.constraint(), targetTerm.termContext());
+                //if <k> cell matches the target <k>, we consider this state final.
+                boolean kMatchesTarget = termK.matchesTermModuloSubstitutions(targetK);
+
+                boolean alreadyLogged = logStep(step, v, term,
+                        step == 1 || kMatchesTarget, false);
+                if (kMatchesTarget) {
+                    if (term.implies(targetTerm, rule, step > 1)) {
+                        global.stateLog.log(StateLog.LogEvent.REACHPROVED, term.term(), term.constraint());
+                        if (global.javaExecutionOptions.logBasic) {
+                            logStep(step, v, term, true, alreadyLogged);
+                            System.out.println("\n============\nStep " + step + ": eliminated!\n============\n");
+                        }
+                        successPaths++;
+                        continue;
+                    } else if (!initKEqualsTargetK) {
+                        //Kprove customization: if <k> matches target <k>, further evaluation is probably useless. Halting.
+                        logStep(step, v, term, global.javaExecutionOptions.logBasic, alreadyLogged);
+                        System.out.println("Halt! Terminating branch.");
+                        proofResults.add(term);
+                        continue;
+                    } else {
+                        if (step > 1 && global.javaExecutionOptions.logBasic) {
+                            System.err.println("Circularity spec. " +
+                                    "Warnings 'Final implication term not matching' above possibly not an issue.");
+                        }
                     }
-                    successPaths++;
-                    continue;
                 }
 
                 /* TODO(AndreiS): terminate the proof with failure based on the klabel _~>_

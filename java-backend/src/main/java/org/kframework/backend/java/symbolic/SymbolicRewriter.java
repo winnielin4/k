@@ -727,10 +727,10 @@ public class SymbolicRewriter {
                     // ENABLE EXCEPTION CHECKSTYLE
                     logStep(step, v, targetCallData, term, true, alreadyLogged);
                     System.out.println("\n\nTerm throwing exception\n============================\n\n");
-                    //KProve.prettyPrint(term.term());
+                    //global.getPrettyPrinter().prettyPrint(term.term());
                     System.out.println(term.term());
                     System.out.print("/\\");
-                    //KProve.prettyPrint(term.constraint());
+                    //global.getPrettyPrinter().prettyPrint(term.constraint());
                     System.out.println(term.constraint().toString().replaceAll("#And", "\n#And"));
                     e.printStackTrace();
                     throw e;
@@ -787,7 +787,7 @@ public class SymbolicRewriter {
             print(term.term(), prettyResult);
             System.out.print("/\\");
             if (prettyResult) {
-                KProve.prettyPrint(term.constraint());
+                global.getPrettyPrinter().prettyPrint(term.constraint());
             } else {
                 System.out.println(term.constraint().toStringMultiline());
             }
@@ -920,7 +920,7 @@ public class SymbolicRewriter {
     private void printCallData(KItem targetCallData, KItem callData, boolean pretty) {
         if (targetCallData != null && callData != null && !targetCallData.equals(callData)) {
             if (pretty) {
-                KProve.prettyPrint(callData);
+                global.getPrettyPrinter().prettyPrint(callData);
             } else {
                 String callDataStr = toStringOrEmpty(callData);
                 System.out.println(callDataStr.substring(0, Math.min(callDataStr.length(), 300)));

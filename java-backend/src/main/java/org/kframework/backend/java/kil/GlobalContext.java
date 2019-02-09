@@ -42,6 +42,8 @@ public class GlobalContext implements Serializable {
     private PrettyPrinter prettyPrinter;
     public final transient FunctionCache functionCache = new FunctionCache();
 
+    private boolean isExecutionPhase = true;
+
     public GlobalContext(
             FileSystem fs,
             GlobalOptions globalOptions,
@@ -62,7 +64,8 @@ public class GlobalContext implements Serializable {
         this.files = files;
         this.equalityOps = new EqualityOperations(() -> def);
         this.stateLog = new StateLog(javaExecutionOptions, files);
-        this.constraintOps = new SMTOperations(() -> def, smtOptions, new Z3Wrapper(smtOptions, kem, globalOptions, files, stateLog), kem, globalOptions);
+        this.constraintOps = new SMTOperations(() -> def, smtOptions,
+                new Z3Wrapper(smtOptions, kem, javaExecutionOptions, files, stateLog), kem, javaExecutionOptions);
         this.kItemOps = new KItemOperations(stage, javaExecutionOptions.deterministicFunctions, kem, this::builtins, globalOptions);
         this.stage = stage;
         this.profiler = profiler;
@@ -107,5 +110,13 @@ public class GlobalContext implements Serializable {
 
     public void setPrettyPrinter(PrettyPrinter prettyPrinter) {
         this.prettyPrinter = prettyPrinter;
+    }
+
+    public boolean isExecutionPhase() {
+        return isExecutionPhase;
+    }
+
+    public void setExecutionPhase(boolean executionPhase) {
+        isExecutionPhase = executionPhase;
     }
 }

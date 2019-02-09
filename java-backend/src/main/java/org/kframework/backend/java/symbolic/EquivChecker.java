@@ -187,7 +187,7 @@ public class EquivChecker {
                     ConjunctiveFormula c0 = ConjunctiveFormula.of(startEnsures.get(ct1.startSyncPoint));
                     ConjunctiveFormula e = ConjunctiveFormula.of(targetEnsures.get(i));
                     ConjunctiveFormula c = c1.add(c2).add(c0).simplify(); // TODO: termContext ??
-                    if (!c.isFalse() && !c.checkUnsat(new FormulaContext(FormulaContext.Kind.EquivConstr, null, c.globalContext()))
+                    if (!c.isFalseExtended() && !c.checkUnsat(new FormulaContext(FormulaContext.Kind.EquivConstr, null, c.globalContext()))
                             && c.smartImplies(e) /* c.implies(e, Collections.emptySet()) */) {
                         ct1.mark = Mark.BLACK;
                         ct2.mark = Mark.BLACK;

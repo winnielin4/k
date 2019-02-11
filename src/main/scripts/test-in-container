@@ -1,6 +1,6 @@
 #!/bin/sh -ex
 apt-get update
-apt-get install -y ./kframework_5.0.0_amd64.deb
+apt-get install --no-install-recommends -y ./kframework_5.0.0_amd64.deb
 cp -R /usr/lib/kframework/tutorial ~
 cd
 echo 'Starting kserver...'

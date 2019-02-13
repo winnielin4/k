@@ -138,7 +138,6 @@ public class BuiltinIOOperations {
         }
 
         byte[] kast = output.stdout != null ? output.stdout : new byte[0];
-        System.out.println(new String(kast));
         return termContext.getKOREtoBackendKILConverter().convert(KoreParser.parse(new String(kast), termContext.getSource()));
     }
 
@@ -158,7 +157,6 @@ public class BuiltinIOOperations {
         });
 
         sb.append("endmodule\n");
-        System.out.println(sb.toString());
         return sb.toString();
     }
 

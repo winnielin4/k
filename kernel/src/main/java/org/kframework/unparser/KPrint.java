@@ -157,6 +157,7 @@ public class KPrint {
             case NONE:
             case BINARY:
             case JSON:
+            case LATEX:
                 return serialize(result, outputMode);
             case PRETTY: {
                 Module unparsingModule = RuleGrammarGenerator.getCombinedGrammar(module, false).getExtensionModule();
@@ -180,6 +181,8 @@ public class KPrint {
                 return ToBinary.apply(term);
             case JSON:
                 return ToJson.apply(term);
+            case LATEX:
+                return ToLatex.apply(term);
             default:
                 throw KEMException.criticalError("Unsupported serialization mode: " + outputMode);
         }

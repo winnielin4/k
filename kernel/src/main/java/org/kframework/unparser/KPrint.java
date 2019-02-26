@@ -119,6 +119,7 @@ public class KPrint {
             case NONE:
             case BINARY:
             case JSON:
+            case LATEX:
             case PRETTY:
             case PROGRAM:
                 return prettyPrint(def.kompiledDefinition, module, orig, colorize, outputMode);
@@ -138,6 +139,7 @@ public class KPrint {
             case NONE:
             case BINARY:
             case JSON:
+            case LATEX:
             case PRETTY:
                 return prettyPrint(module, orig, colorize, outputMode);
             case PROGRAM: {

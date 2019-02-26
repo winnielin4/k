@@ -95,8 +95,8 @@ public final class KastOptions {
     @Parameter(names="--expand-macros", description="Also expand macros in the parsed string.")
     public boolean expandMacros = false;
 
-    @Parameter(names="--parser", description="Which parser to use for expression.")
-    public String parser = "program";
+    @Parameter(names="--parse-with", description="Which parser to use for expression.")
+    public String parseWith = "program";
 
     @ParametersDelegate
     public Experimental experimental = new Experimental();

@@ -120,7 +120,7 @@ public class KastFrontEnd extends FrontEnd {
             }
 
             KPrint kprint = new KPrint(kem, files, ttyInfo, options.print, compiledDef.get().kompileOptions);
-            if (options.parser == "program") {
+            if (options.parseWith.equals("program")) {
                 K parsed = def.getParser(mod, sort, kem).apply(FileUtil.read(stringToParse), source);
                 if (options.expandMacros) {
                     parsed = new ExpandMacros(compiledMod, files, def.kompileOptions, false).expand(parsed);
@@ -128,7 +128,7 @@ public class KastFrontEnd extends FrontEnd {
                 System.out.println(new String(kprint.prettyPrint(def, compiledMod, parsed), StandardCharsets.UTF_8));
                 sw.printTotal("Total");
 
-            } else if (options.parser == "rule") {
+            } else if (options.parseWith.equals("rule")) {
                 File cacheFile = def.kompileOptions.experimental.cacheFile != null
                                ? files.resolveWorkingDirectory(def.kompileOptions.experimental.cacheFile)
                                : files.resolveKompiled("cache.bin");
@@ -138,7 +138,7 @@ public class KastFrontEnd extends FrontEnd {
                 System.out.println(rule.toString());
 
             } else {
-                throw KEMException.innerParserError("Unrecognized parser: " + options.parser);
+                throw KEMException.innerParserError("Unrecognized parser: " + options.parseWith);
             }
 
             return 0;

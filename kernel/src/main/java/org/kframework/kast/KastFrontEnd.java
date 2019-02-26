@@ -7,9 +7,12 @@ import com.google.inject.Provider;
 import org.kframework.attributes.Source;
 import org.kframework.compile.AddSortInjections;
 import org.kframework.compile.ExpandMacros;
+import org.kframework.definition.Rule;
 import org.kframework.kompile.CompiledDefinition;
+import org.kframework.kompile.DefinitionParsing;
 import org.kframework.kore.K;
 import org.kframework.main.FrontEnd;
+import org.kframework.parser.concrete2kore.ParserUtils;
 import org.kframework.parser.outer.Outer;
 import org.kframework.unparser.KPrint;
 import org.kframework.unparser.PrintOptions;
@@ -94,7 +97,6 @@ public class KastFrontEnd extends FrontEnd {
             Source source = options.source();
 
             CompiledDefinition def = compiledDef.get();
-            KPrint kprint = new KPrint(kem, files, ttyInfo, options.print, compiledDef.get().kompileOptions);
             org.kframework.kore.Sort sort = options.sort;
             if (sort == null) {
                 if (env.get("KRUN_SORT") != null) {
@@ -116,12 +118,29 @@ public class KastFrontEnd extends FrontEnd {
                 mod = mod2.get();
                 compiledMod = def.kompiledDefinition.getModule(options.module).get();
             }
-            K parsed = def.getParser(mod, sort, kem).apply(FileUtil.read(stringToParse), source);
-            if (options.expandMacros) {
-                parsed = new ExpandMacros(compiledMod, files, def.kompileOptions, false).expand(parsed);
+
+            KPrint kprint = new KPrint(kem, files, ttyInfo, options.print, compiledDef.get().kompileOptions);
+            if (options.parser == "program") {
+                K parsed = def.getParser(mod, sort, kem).apply(FileUtil.read(stringToParse), source);
+                if (options.expandMacros) {
+                    parsed = new ExpandMacros(compiledMod, files, def.kompileOptions, false).expand(parsed);
+                }
+                System.out.println(new String(kprint.prettyPrint(def, compiledMod, parsed), StandardCharsets.UTF_8));
+                sw.printTotal("Total");
+
+            } else if (options.parser == "rule") {
+                File cacheFile = def.kompileOptions.experimental.cacheFile != null
+                               ? files.resolveWorkingDirectory(def.kompileOptions.experimental.cacheFile)
+                               : files.resolveKompiled("cache.bin");
+                ParserUtils parserUtils = new ParserUtils(files::resolveWorkingDirectory, kem, kem.options);
+                DefinitionParsing definitionParsing = new DefinitionParsing(new ArrayList<>(), false, kem, parserUtils, false, cacheFile, true, false);
+                Rule rule = definitionParsing.parseRule(def, FileUtil.read(stringToParse), source);
+                System.out.println(rule.toString());
+
+            } else {
+                throw KEMException.innerParserError("Unrecognized parser: " + options.parser);
             }
-            System.out.println(new String(kprint.prettyPrint(def, compiledMod, parsed), StandardCharsets.UTF_8));
-            sw.printTotal("Total");
+
             return 0;
         } finally {
             scope.exit();

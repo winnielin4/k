@@ -314,6 +314,13 @@ public class DefinitionParsing {
         }
     }
 
+    public String parseSentences(CompiledDefinition compiledDef, String contents, Source source) {
+        String mainModuleName   = "DUMMY-PARSING-MODULE";
+        String definitionString = "module " + mainModuleName + "\n" + contents + "\nendmodule";
+        org.kframework.definition.Module testModule = ParserUtils.parseMainModuleOuterSyntax(definitionString, source, mainModuleName);
+        return testModule.toString();
+    }
+
     private Rule upRule(K contents) {
         KApply ruleContents = (KApply) contents;
         List<org.kframework.kore.K> items = ruleContents.klist().items();

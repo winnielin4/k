@@ -128,20 +128,20 @@ public class KastFrontEnd extends FrontEnd {
                 System.out.println(new String(kprint.prettyPrint(def, compiledMod, parsed), StandardCharsets.UTF_8));
                 sw.printTotal("Total");
 
-            } else if (options.parseWith.equals("configuration")) {
+            } else if (options.parseWith.equals("configuration") || options.parseWith.equals("sentences")) {
                 File cacheFile = def.kompileOptions.experimental.cacheFile != null
                                ? files.resolveWorkingDirectory(def.kompileOptions.experimental.cacheFile)
                                : files.resolveKompiled("cache.bin");
                 ParserUtils parserUtils = new ParserUtils(files::resolveWorkingDirectory, kem, kem.options);
                 DefinitionParsing definitionParsing = new DefinitionParsing(new ArrayList<>(), false, kem, parserUtils, false, cacheFile, true, false);
-                Rule rule = definitionParsing.parseRule(def, FileUtil.read(stringToParse), source);
-                System.out.println(rule.toString());
 
-            } else if (options.parseWith.equals("sentences")) {
-                String mainModuleName   = "DUMMY-PARSING-MODULE";
-                String definitionString = "module " + mainModuleName + "\n" + FileUtil.read(stringToParse) + "\nendmodule";
-                org.kframework.definition.Module testModule = ParserUtils.parseMainModuleOuterSyntax(definitionString, source, mainModuleName);
-                System.out.println(testModule.toString());
+                if (options.parseWith.equals("configuration")) {
+                    Rule rule = definitionParsing.parseRule(def, FileUtil.read(stringToParse), source);
+                    System.out.println(rule.toString());
+                } else if (options.parseWith.equals("sentences")) {
+                    System.out.println(definitionParsing.parseSentences(def, FileUtil.read(stringToParse), source));
+                }
+
             } else {
                 throw KEMException.innerParserError("Unrecognized parser: " + options.parseWith);
             }

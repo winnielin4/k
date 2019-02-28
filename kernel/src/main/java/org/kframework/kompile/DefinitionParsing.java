@@ -315,10 +315,12 @@ public class DefinitionParsing {
     }
 
     public String parseSentences(CompiledDefinition compiledDef, String contents, Source source) {
-        String mainModuleName   = "DUMMY-PARSING-MODULE";
-        String definitionString = "module " + mainModuleName + "\n" + contents + "\nendmodule";
-        org.kframework.definition.Module testModule = ParserUtils.parseMainModuleOuterSyntax(definitionString, source, mainModuleName);
-        return testModule.toString();
+        String mainModuleName    = "DUMMY-PARSING-MODULE";
+        String definitionString  = "module " + mainModuleName + "\n" + contents + "\nendmodule";
+        Module moduleWithBubbles = ParserUtils.parseMainModuleOuterSyntax(definitionString, source, mainModuleName);
+        Definition testDefinition = new Definition(moduleWithBubbles, Set(moduleWithBubbles), Att().empty());
+        Definition resolved = resolveConfigBubbles(compiledDef.kompiledDefinition, moduleWithBubbles);
+        return resolved.toString();
     }
 
     private Rule upRule(K contents) {

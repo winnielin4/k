@@ -128,7 +128,7 @@ public class KastFrontEnd extends FrontEnd {
                 System.out.println(new String(kprint.prettyPrint(def, compiledMod, parsed), StandardCharsets.UTF_8));
                 sw.printTotal("Total");
 
-            } else if (options.parseWith.equals("rule")) {
+            } else if (options.parseWith.equals("configuration")) {
                 File cacheFile = def.kompileOptions.experimental.cacheFile != null
                                ? files.resolveWorkingDirectory(def.kompileOptions.experimental.cacheFile)
                                : files.resolveKompiled("cache.bin");
@@ -137,6 +137,9 @@ public class KastFrontEnd extends FrontEnd {
                 Rule rule = definitionParsing.parseRule(def, FileUtil.read(stringToParse), source);
                 System.out.println(rule.toString());
 
+            } else if (options.parseWith.equals("sentences")) {
+                String definitionString = "module DUMMY-PARSING-MODULE\n" + FileUtil.read(stringToParse) + "\nendmodule";
+                System.out.println(definitionString);
             } else {
                 throw KEMException.innerParserError("Unrecognized parser: " + options.parseWith);
             }

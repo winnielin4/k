@@ -315,12 +315,12 @@ public class DefinitionParsing {
     }
 
     public String parseSentences(CompiledDefinition compiledDef, String contents, Source source) {
-        String mainModuleName    = "DUMMY-PARSING-MODULE";
-        String definitionString  = "module " + mainModuleName + "\n" + contents + "\nendmodule";
-        Module moduleWithBubbles = ParserUtils.parseMainModuleOuterSyntax(definitionString, source, mainModuleName);
+        String dummyModuleName    = "DUMMY-PARSING-MODULE";
+        String definitionString   = "module " + dummyModuleName + "\n" + contents + "\nendmodule";
+        Module moduleWithBubbles  = ParserUtils.parseMainModuleOuterSyntax(definitionString, source, dummyModuleName);
         Definition testDefinition = new Definition(moduleWithBubbles, Set(moduleWithBubbles), Att().empty());
         Definition resolved = resolveConfigBubbles(compiledDef.kompiledDefinition, moduleWithBubbles);
-        return resolved.toString();
+        return resolved.getModule(dummyModuleName).get().toString();
     }
 
     private Rule upRule(K contents) {

@@ -138,8 +138,10 @@ public class KastFrontEnd extends FrontEnd {
                 System.out.println(rule.toString());
 
             } else if (options.parseWith.equals("sentences")) {
-                String definitionString = "module DUMMY-PARSING-MODULE\n" + FileUtil.read(stringToParse) + "\nendmodule";
-                System.out.println(definitionString);
+                String mainModuleName   = "DUMMY-PARSING-MODULE";
+                String definitionString = "module " + mainModuleName + "\n" + FileUtil.read(stringToParse) + "\nendmodule";
+                org.kframework.definition.Module testModule = ParserUtils.parseMainModuleOuterSyntax(definitionString, source, mainModuleName);
+                System.out.println(testModule.toString());
             } else {
                 throw KEMException.innerParserError("Unrecognized parser: " + options.parseWith);
             }

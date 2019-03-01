@@ -57,6 +57,16 @@ public class ToLatex {
         writeString(out, ("\\att{" + att.toString() + "}"));
     }
 
+    public static byte[] apply(Definition def) {
+        try {
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            apply(new DataOutputStream(out), def);
+            return out.toByteArray();
+        } catch (IOException e) {
+            throw KEMException.criticalError("Could not write K Definition to LaTeX", e);
+        }
+    }
+
     public static void apply(DataOutputStream out, Definition def) throws IOException {
         writeString(out, ("\\outerDefinition{"));
         for (Module mod: JavaConverters.seqAsJavaList(def.modules().toSeq())) {
@@ -65,6 +75,16 @@ public class ToLatex {
         writeString(out, "}{");
         apply(out, def.att());
         writeString(out, "}");
+    }
+
+    public static byte[] apply(Module mod) {
+        try {
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            apply(new DataOutputStream(out), mod);
+            return out.toByteArray();
+        } catch (IOException e) {
+            throw KEMException.criticalError("Could not write K Module to LaTeX", e);
+        }
     }
 
     public static void apply(DataOutputStream out, Module mod) throws IOException {

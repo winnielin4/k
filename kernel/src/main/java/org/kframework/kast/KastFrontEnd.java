@@ -143,8 +143,8 @@ public class KastFrontEnd extends FrontEnd {
                     Rule rule = definitionParsing.parseRule(def, FileUtil.read(stringToParse), source);
                     System.out.println(rule.toString());
                 } else if (options.parseWith.equals("definition")) {
-                    Definition parsed = definitionParsing.parseDefinitionAndResolveBubbles(new File("test.k"), "TEST-PARSING", "TEST-WASM", new HashSet<String>());
-                    System.out.println(parsed.getModule("TEST-PARSING").get().toString());
+                    Definition parsed = definitionParsing.parseDefinitionAndResolveBubbles(new File(options.source().source()), compiledMod.name(), mod.name(), new HashSet<String>());
+                    System.out.println(parsed.toString());
                 } else if (options.parseWith.equals("sentences")) {
                     for (Sentence sent: definitionParsing.parseSentences(def, FileUtil.read(stringToParse), source)) {
                         kprint.serializeSentence(sent, options.print.output);

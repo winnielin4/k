@@ -124,7 +124,7 @@ public class KastFrontEnd extends FrontEnd {
             }
 
             KPrint kprint = new KPrint(kem, files, ttyInfo, options.print, compiledDef.get().kompileOptions);
-            if (options.parseWith.equals("program")) {
+            if (options.input.equals("program")) {
                 K parsed = def.getParser(mod, sort, kem).apply(FileUtil.read(stringToParse), source);
                 if (options.expandMacros) {
                     parsed = new ExpandMacros(compiledMod, files, def.kompileOptions, false).expand(parsed);
@@ -132,27 +132,27 @@ public class KastFrontEnd extends FrontEnd {
                 System.out.println(new String(kprint.prettyPrint(def, compiledMod, parsed), StandardCharsets.UTF_8));
                 sw.printTotal("Total");
 
-            } else if (options.parseWith.equals("configuration") || options.parseWith.equals("definition") || options.parseWith.equals("sentences")) {
+            } else if (options.input.equals("configuration") || options.input.equals("definition") || options.input.equals("sentences")) {
                 File cacheFile = def.kompileOptions.experimental.cacheFile != null
                                ? files.resolveWorkingDirectory(def.kompileOptions.experimental.cacheFile)
                                : files.resolveKompiled("cache.bin");
                 ParserUtils parserUtils = new ParserUtils(files::resolveWorkingDirectory, kem, kem.options);
                 DefinitionParsing definitionParsing = new DefinitionParsing(Collections.singletonList(new File(options.definitionLoading.directory)), false, kem, parserUtils, false, cacheFile, true, false);
 
-                if (options.parseWith.equals("configuration")) {
+                if (options.input.equals("configuration")) {
                     Rule rule = definitionParsing.parseRule(def, FileUtil.read(stringToParse), source);
                     System.out.println(rule.toString());
-                } else if (options.parseWith.equals("definition")) {
+                } else if (options.input.equals("definition")) {
                     Definition parsed = definitionParsing.parseDefinitionAndResolveBubbles(new File(options.source().source()), compiledMod.name(), mod.name(), new HashSet<String>());
                     System.out.println(parsed.toString());
-                } else if (options.parseWith.equals("sentences")) {
+                } else if (options.input.equals("sentences")) {
                     for (Sentence sent: definitionParsing.parseSentences(def, FileUtil.read(stringToParse), source)) {
                         kprint.serializeSentence(sent, options.print.output);
                     }
                 }
 
             } else {
-                throw KEMException.innerParserError("Unrecognized parser: " + options.parseWith);
+                throw KEMException.innerParserError("Unrecognized parser: " + options.input);
             }
 
             return 0;

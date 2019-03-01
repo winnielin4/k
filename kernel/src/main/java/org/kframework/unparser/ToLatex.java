@@ -79,6 +79,16 @@ public class ToLatex {
         writeString(out, ("}{" + mod.att() + "}"));
     }
 
+    public static byte[] apply(Sentence sent) {
+        try {
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            apply(new DataOutputStream(out), sent);
+            return out.toByteArray();
+        } catch (IOException e) {
+            throw KEMException.criticalError("Could not write K term to LaTeX", e, sent);
+        }
+    }
+
     public static void apply(DataOutputStream out, Sentence sent) throws IOException {
         if (sent instanceof Rule) {
             Rule rule = (Rule) sent;

@@ -10,6 +10,7 @@ import org.kframework.compile.AddSortInjections;
 import org.kframework.compile.ExpandMacros;
 import org.kframework.definition.Definition;
 import org.kframework.definition.Module;
+import org.kframework.definition.Sentence;
 import org.kframework.kompile.CompiledDefinition;
 import org.kframework.kompile.KompileOptions;
 import org.kframework.kore.Assoc;
@@ -185,6 +186,15 @@ public class KPrint {
                 return ToJson.apply(term);
             case LATEX:
                 return ToLatex.apply(term);
+            default:
+                throw KEMException.criticalError("Unsupported serialization mode: " + outputMode);
+        }
+    }
+
+    public static byte[] serializeSentence(Sentence sent, OutputModes outputMode) {
+        switch (outputMode) {
+            case LATEX:
+                return ToLatex.apply(sent);
             default:
                 throw KEMException.criticalError("Unsupported serialization mode: " + outputMode);
         }

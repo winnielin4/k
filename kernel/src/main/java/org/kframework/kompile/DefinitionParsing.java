@@ -34,6 +34,7 @@ import org.kframework.utils.errorsystem.ParseFailedException;
 import org.kframework.utils.file.FileUtil;
 import scala.Option;
 import scala.Tuple2;
+import scala.collection.JavaConverters;
 import scala.collection.Set;
 import scala.util.Either;
 
@@ -314,13 +315,13 @@ public class DefinitionParsing {
         }
     }
 
-    public String parseSentences(CompiledDefinition compiledDef, String contents, Source source) {
+    public List<Sentence> parseSentences(CompiledDefinition compiledDef, String contents, Source source) {
         String     dummyModuleName   = "DUMMY-PARSING-MODULE";
         String     definitionString  = "module " + dummyModuleName + "\n" + contents + "\nendmodule";
         Module     moduleWithBubbles = ParserUtils.parseMainModuleOuterSyntax(definitionString, source, dummyModuleName);
         Definition testDefinition    = new Definition(moduleWithBubbles, Set(moduleWithBubbles), Att().empty());
         Definition resolved          = resolveConfigBubbles(testDefinition, compiledDef.getParsedDefinition().getModule("DEFAULT-CONFIGURATION").get());
-        return resolved.toString();
+        return JavaConverters.seqAsJavaList(resolved.getModule(dummyModuleName).get().localSentences().toSeq());
     }
 
     private Rule upRule(K contents) {

@@ -8,6 +8,7 @@ import org.kframework.attributes.Source;
 import org.kframework.compile.AddSortInjections;
 import org.kframework.compile.ExpandMacros;
 import org.kframework.definition.Definition;
+import org.kframework.definition.Sentence;
 import org.kframework.definition.Rule;
 import org.kframework.kompile.CompiledDefinition;
 import org.kframework.kompile.DefinitionParsing;
@@ -145,7 +146,9 @@ public class KastFrontEnd extends FrontEnd {
                     Definition parsed = definitionParsing.parseDefinitionAndResolveBubbles(new File("test.k"), "TEST-PARSING", "TEST-WASM", new HashSet<String>());
                     System.out.println(parsed.getModule("TEST-PARSING").get().toString());
                 } else if (options.parseWith.equals("sentences")) {
-                    System.out.println(definitionParsing.parseSentences(def, FileUtil.read(stringToParse), source));
+                    for (Sentence sent: definitionParsing.parseSentences(def, FileUtil.read(stringToParse), source)) {
+                        System.out.println(sent.toString());
+                    }
                 }
 
             } else {

@@ -191,6 +191,24 @@ public class KPrint {
         }
     }
 
+    public static byte[] serializeDefinition(Definition def, OutputModes outputMode) {
+        switch (outputMode) {
+            case LATEX:
+                return ToLatex.apply(def);
+            default:
+                throw KEMException.criticalError("Unsupported serialization mode: " + outputMode);
+        }
+    }
+
+    public static byte[] serializeModule(Module mod, OutputModes outputMode) {
+        switch (outputMode) {
+            case LATEX:
+                return ToLatex.apply(mod);
+            default:
+                throw KEMException.criticalError("Unsupported serialization mode: " + outputMode);
+        }
+    }
+
     public static byte[] serializeSentence(Sentence sent, OutputModes outputMode) {
         switch (outputMode) {
             case LATEX:

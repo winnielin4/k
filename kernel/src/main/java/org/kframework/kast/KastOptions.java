@@ -98,6 +98,9 @@ public final class KastOptions {
     @Parameter(names="--input", description="Input format to parse.")
     public String input = "program";
 
+    @Parameter(names="--main-module", description="Module to print from when --input is set to `definition` or `module`.")
+    public String mainModule;
+
     @ParametersDelegate
     public Experimental experimental = new Experimental();
 

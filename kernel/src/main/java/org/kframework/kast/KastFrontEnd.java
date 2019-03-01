@@ -132,7 +132,7 @@ public class KastFrontEnd extends FrontEnd {
                 System.out.println(new String(kprint.prettyPrint(def, compiledMod, parsed), StandardCharsets.UTF_8));
                 sw.printTotal("Total");
 
-            } else if (options.input.equals("configuration") || options.input.equals("definition") || options.input.equals("sentences")) {
+            } else if (options.input.equals("configuration") || options.input.equals("definition") || options.input.equals("module") || options.input.equals("sentences")) {
                 File cacheFile = def.kompileOptions.experimental.cacheFile != null
                                ? files.resolveWorkingDirectory(def.kompileOptions.experimental.cacheFile)
                                : files.resolveKompiled("cache.bin");
@@ -142,9 +142,14 @@ public class KastFrontEnd extends FrontEnd {
                 if (options.input.equals("configuration")) {
                     Rule rule = definitionParsing.parseRule(def, FileUtil.read(stringToParse), source);
                     System.out.println(rule.toString());
-                } else if (options.input.equals("definition")) {
-                    Definition parsed = definitionParsing.parseDefinitionAndResolveBubbles(new File(options.source().source()), compiledMod.name(), mod.name(), new HashSet<String>());
-                    System.out.println(parsed.toString());
+                } else if (options.input.equals("definition") || options.input.equals("module")) {
+                    String mainModule = options.mainModule != null ? options.mainModule : compiledMod.name();
+                    Definition parsed = definitionParsing.parseDefinitionAndResolveBubbles(new File(options.source().source()), mainModule, mainModule, new HashSet<String>());
+                    if (options.input.equals("definition")) {
+                        System.out.println(parsed.toString());
+                    } else if (options.input.equals("module")) {
+                        System.out.println(parsed.getModule(mainModule).get().toString());
+                    }
                 } else if (options.input.equals("sentences")) {
                     for (Sentence sent: definitionParsing.parseSentences(def, FileUtil.read(stringToParse), source)) {
                         kprint.serializeSentence(sent, options.print.output);

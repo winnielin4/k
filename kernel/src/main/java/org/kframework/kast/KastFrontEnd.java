@@ -7,6 +7,7 @@ import com.google.inject.Provider;
 import org.kframework.attributes.Source;
 import org.kframework.compile.AddSortInjections;
 import org.kframework.compile.ExpandMacros;
+import org.kframework.definition.Definition;
 import org.kframework.definition.Rule;
 import org.kframework.kompile.CompiledDefinition;
 import org.kframework.kompile.DefinitionParsing;
@@ -38,6 +39,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.HashSet;
+import java.util.Collections;
 
 public class KastFrontEnd extends FrontEnd {
 
@@ -128,16 +131,19 @@ public class KastFrontEnd extends FrontEnd {
                 System.out.println(new String(kprint.prettyPrint(def, compiledMod, parsed), StandardCharsets.UTF_8));
                 sw.printTotal("Total");
 
-            } else if (options.parseWith.equals("configuration") || options.parseWith.equals("sentences")) {
+            } else if (options.parseWith.equals("configuration") || options.parseWith.equals("definition") || options.parseWith.equals("sentences")) {
                 File cacheFile = def.kompileOptions.experimental.cacheFile != null
                                ? files.resolveWorkingDirectory(def.kompileOptions.experimental.cacheFile)
                                : files.resolveKompiled("cache.bin");
                 ParserUtils parserUtils = new ParserUtils(files::resolveWorkingDirectory, kem, kem.options);
-                DefinitionParsing definitionParsing = new DefinitionParsing(new ArrayList<>(), false, kem, parserUtils, false, cacheFile, true, false);
+                DefinitionParsing definitionParsing = new DefinitionParsing(Collections.singletonList(new File(options.definitionLoading.directory)), false, kem, parserUtils, false, cacheFile, true, false);
 
                 if (options.parseWith.equals("configuration")) {
                     Rule rule = definitionParsing.parseRule(def, FileUtil.read(stringToParse), source);
                     System.out.println(rule.toString());
+                } else if (options.parseWith.equals("definition")) {
+                    Definition parsed = definitionParsing.parseDefinitionAndResolveBubbles(new File("test.k"), "TEST-PARSING", "TEST-WASM", new HashSet<String>());
+                    System.out.println(parsed.getModule("TEST-PARSING").get().toString());
                 } else if (options.parseWith.equals("sentences")) {
                     System.out.println(definitionParsing.parseSentences(def, FileUtil.read(stringToParse), source));
                 }

@@ -5,12 +5,10 @@ import com.google.inject.Inject;
 import org.kframework.RewriterResult;
 import org.kframework.backend.kore.ModuleToKORE;
 import org.kframework.compile.AddSortInjections;
-import org.kframework.compile.ExpandMacros;
 import org.kframework.definition.Definition;
 import org.kframework.definition.Module;
 import org.kframework.definition.Rule;
 import org.kframework.kompile.CompiledDefinition;
-import org.kframework.kompile.KompileOptions;
 import org.kframework.kore.K;
 import org.kframework.krun.KRunOptions;
 import org.kframework.krun.RunProcess;
@@ -46,7 +44,6 @@ public class LLVMRewriter implements Function<Definition, Rewriter> {
     private final FileUtil files;
     private final CompiledDefinition def;
     private final KRunOptions options;
-    private final KompileOptions kompileOptions;
     private final Properties idsToLabels;
 
     @Inject
@@ -54,12 +51,10 @@ public class LLVMRewriter implements Function<Definition, Rewriter> {
             FileUtil files,
             CompiledDefinition def,
             KRunOptions options,
-            KompileOptions kompileOptions,
             InitializeDefinition init) {
         this.files = files;
         this.def = def;
         this.options = options;
-        this.kompileOptions = kompileOptions;
         this.idsToLabels = init.serialized;
 
     }
@@ -75,10 +70,8 @@ public class LLVMRewriter implements Function<Definition, Rewriter> {
             @Override
             public RewriterResult execute(K k, Optional<Integer> depth) {
                 Module mod = def.executionModule();
-                ExpandMacros macroExpander = new ExpandMacros(mod, files, kompileOptions, false);
                 ModuleToKORE converter = new ModuleToKORE(mod, files, def.topCellInitializer);
-                K withMacros = macroExpander.expand(k);
-                K kWithInjections = new AddSortInjections(mod).addInjections(withMacros);
+                K kWithInjections = new AddSortInjections(mod).addInjections(k);
                 converter.convert(kWithInjections);
                 String koreOutput = "[initial-configuration{}(" + converter.toString() + ")]\n\nmodule TMP\nendmodule []\n";
                 String defPath = files.resolveKompiled("definition.kore").getAbsolutePath();

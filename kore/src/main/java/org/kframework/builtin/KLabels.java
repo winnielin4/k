@@ -49,8 +49,6 @@ public class KLabels {
 
     public static final KLabel EQUALS_K = KLabel("_==K_");
     public static final KLabel NOT_EQUALS_K = KLabel("_=/=K_");
-    public static final KLabel IN_K = KLabel("_:=K_");
-    public static final KLabel NOT_IN_K = KLabel("_:/=K_");
 
     public static final KLabel MAP_CHOICE = KLabel("Map:choice");
     public static final KLabel SET_CHOICE = KLabel("Set:choice");

@@ -4,7 +4,9 @@ package org.kframework.utils.options;
 import com.beust.jcommander.Parameter;
 import com.google.inject.Inject;
 
-public class DefinitionLoadingOptions {
+import java.io.Serializable;
+
+public class DefinitionLoadingOptions implements Serializable {
 
     public DefinitionLoadingOptions() {}
 

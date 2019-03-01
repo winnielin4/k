@@ -146,13 +146,15 @@ public class KastFrontEnd extends FrontEnd {
                     String mainModule = options.mainModule != null ? options.mainModule : compiledMod.name();
                     Definition parsed = definitionParsing.parseDefinitionAndResolveBubbles(new File(options.source().source()), mainModule, mainModule, new HashSet<String>());
                     if (options.input.equals("definition")) {
-                        System.out.println(parsed.toString());
+                        byte[] serialized = kprint.serializeDefinition(parsed);
+                        System.out.println(new String(serialized, StandardCharsets.UTF_8));
                     } else if (options.input.equals("module")) {
-                        System.out.println(parsed.getModule(mainModule).get().toString());
+                        byte[] serialized = kprint.serializeModule(parsed.getModule(mainModule).get());
+                        System.out.println(new String(serialized, StandardCharsets.UTF_8));
                     }
                 } else if (options.input.equals("sentences")) {
                     for (Sentence sent: definitionParsing.parseSentences(def, FileUtil.read(stringToParse), source)) {
-                        kprint.serializeSentence(sent, options.print.output);
+                        System.out.println(new String(kprint.serializeSentence(sent), StandardCharsets.UTF_8));
                     }
                 }
 

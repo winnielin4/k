@@ -28,14 +28,24 @@ public class OuterParsingOptions implements Serializable {
 
     private File mainDefinitionFile;
 
-    public synchronized File mainDefinitionFile(FileUtil files) {
+    public synchronized File mainDefinitionFileOrNull(FileUtil files) {
         if (mainDefinitionFile == null) {
-            if (parameters == null || parameters.size() == 0) {
-                throw KEMException.criticalError("You have to provide exactly one main file in order to do outer parsing.");
+            if (parameters == null || parameters.size() != 1) {
+                mainDefinitionFile = null;
+            } else {
+                mainDefinitionFile = files.resolveWorkingDirectory(parameters.get(0));
             }
-            mainDefinitionFile = files.resolveWorkingDirectory(parameters.get(0));
         }
         return mainDefinitionFile;
+    }
+
+    public synchronized File mainDefinitionFile(FileUtil files) {
+        File mainDef = mainDefinitionFileOrNull(files);
+        if (mainDef == null) {
+            throw KEMException.criticalError("You have to provide exactly one main file in order to do outer parsing.");
+        } else {
+            return mainDef;
+        }
     }
 
     @Parameter(names={"--directory", "-d"}, description="Path to the directory in which the output resides. An output can be either a kompiled K definition or a document which depends on the type of backend. The default is the directory containing the main definition file.")

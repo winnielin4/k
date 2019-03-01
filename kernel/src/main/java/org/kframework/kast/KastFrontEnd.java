@@ -147,7 +147,7 @@ public class KastFrontEnd extends FrontEnd {
                     System.out.println(parsed.getModule("TEST-PARSING").get().toString());
                 } else if (options.parseWith.equals("sentences")) {
                     for (Sentence sent: definitionParsing.parseSentences(def, FileUtil.read(stringToParse), source)) {
-                        System.out.println(sent.toString());
+                        kprint.serializeSentence(sent, options.print.output);
                     }
                 }
 

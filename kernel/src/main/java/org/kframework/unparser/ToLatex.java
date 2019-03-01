@@ -1,6 +1,16 @@
 // Copyright (c) 2019 K Team. All Rights Reserved.
 package org.kframework.unparser;
 
+import org.kframework.attributes.Att;
+import org.kframework.definition.Definition;
+import org.kframework.definition.Module;
+import org.kframework.definition.Sentence;
+import org.kframework.definition.Rule;
+import org.kframework.definition.ModuleComment;
+import org.kframework.definition.Production;
+import org.kframework.definition.SyntaxPriority;
+import org.kframework.definition.SyntaxSort;
+
 import org.kframework.kore.InjectedKLabel;
 import org.kframework.kore.K;
 import org.kframework.kore.KApply;
@@ -17,6 +27,8 @@ import java.io.ByteArrayOutputStream;
 import java.nio.charset.StandardCharsets;
 
 import java.util.Optional;
+
+import scala.collection.JavaConverters;
 
 /**
  * Writes a KAST term to the LaTeX format.
@@ -39,6 +51,56 @@ public class ToLatex {
 
     private static void writeString(DataOutputStream out, String str) throws IOException {
         out.write(str.getBytes(StandardCharsets.UTF_8));
+    }
+
+    public static void apply(DataOutputStream out, Att att) throws IOException {
+        writeString(out, ("\\att{" + att.toString() + "}"));
+    }
+
+    public static void apply(DataOutputStream out, Definition def) throws IOException {
+        writeString(out, ("\\outerDefinition{"));
+        for (Module mod: JavaConverters.seqAsJavaList(def.modules().toSeq())) {
+            apply(out, mod);
+        }
+        writeString(out, "}{");
+        apply(out, def.att());
+        writeString(out, "}");
+    }
+
+    public static void apply(DataOutputStream out, Module mod) throws IOException {
+        writeString(out, ("\\outerModule{" + mod.name() + "}{"));
+        for (Module m: JavaConverters.seqAsJavaList(mod.imports().toSeq())) {
+            writeString(out, "\\outerImport{" + m.name() + "}");
+        }
+        writeString(out, "}{");
+        for (Sentence sent: JavaConverters.seqAsJavaList(mod.localSentences().toSeq())) {
+            apply(out, sent);
+        }
+        writeString(out, ("}{" + mod.att() + "}"));
+    }
+
+    public static void apply(DataOutputStream out, Sentence sent) throws IOException {
+        if (sent instanceof Rule) {
+            Rule rule = (Rule) sent;
+            writeString(out, "\\outerRule{");
+            apply(out, rule.body());
+            writeString(out, "}{");
+            apply(out, rule.requires());
+            writeString(out, "}{");
+            apply(out, rule.ensures());
+            writeString(out, "}{");
+            apply(out, rule.att());
+            writeString(out, "}");
+
+        } else if (sent instanceof ModuleComment) {
+            ModuleComment moduleComment = (ModuleComment) sent;
+            writeString(out, "\\outerModuleComment{" + moduleComment.comment() + "}{");
+            apply(out, moduleComment.att());
+            writeString(out, "}");
+
+        } else {
+            KEMException.criticalError("Do not know how to serialize sentence: " + sent.toString());
+        }
     }
 
     public static void apply(DataOutputStream out, K k) throws IOException {

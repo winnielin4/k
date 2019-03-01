@@ -306,6 +306,10 @@ public class FileUtil {
         }
     }
 
+    public Reader readFromWorkingDirectory(File f) {
+        return readFromWorkingDirectory(f.getPath());
+    }
+
     public Reader readFromWorkingDirectory(String path) {
         File f = resolveWorkingDirectory(path);
         try {

@@ -54,7 +54,7 @@ public class ToLatex {
     }
 
     public static void apply(DataOutputStream out, Att att) throws IOException {
-        writeString(out, ("\\att{" + att.toString() + "}"));
+        writeString(out, ("\\outerAtt{" + att.toString() + "}"));
     }
 
     public static byte[] apply(Definition def) {

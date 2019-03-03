@@ -67,9 +67,9 @@ public final class KRunOptions {
             String kastBinary = getKast(files);
             if (parser == null) {
                 if (term()) {
-                    return kastBinary + " --output kast -m " + mainModuleName;
+                    return kastBinary + " -m " + mainModuleName;
                 } else {
-                    return kastBinary + " --output kast";
+                    return kastBinary;
                 }
             } else {
                 return parser;
@@ -126,7 +126,7 @@ public final class KRunOptions {
         if (OS.current() == OS.WINDOWS) {
             binary = "kast.bat";
         }
-        return files.resolveKBase("bin/" + binary).getAbsolutePath();
+        return files.resolveKBase("bin/" + binary).getAbsolutePath() + " --output kast";
     }
 
     @Parameter(names="--io", description="Use real IO when running the definition. Defaults to true.", arity=1,

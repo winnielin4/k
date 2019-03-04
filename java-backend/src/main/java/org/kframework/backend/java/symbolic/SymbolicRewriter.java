@@ -30,6 +30,7 @@ import org.kframework.backend.java.util.FormulaContext;
 import org.kframework.backend.java.util.RuleSourceUtil;
 import org.kframework.backend.java.utils.BitSet;
 import org.kframework.builtin.KLabels;
+import org.kframework.builtin.Rules;
 import org.kframework.kore.FindK;
 import org.kframework.kore.K;
 import org.kframework.kore.KApply;
@@ -146,6 +147,7 @@ public class SymbolicRewriter {
                 constructor.KList(((KApply) subject.term()).klist().stream().map(k ->
                         k instanceof KApply && ((KApply) k).klabel().name().contains(Strategy.strategyCellName()) ? s : k).collect(Collectors.toList())), emptyAtt);
         ConstrainedTerm stuckTerm = new ConstrainedTerm(entireConf, subject.constraint(), subject.termContext());
+        global.stateLog.log(StateLog.LogEvent.RULE, Rules.STUCK_RULE, subject.term(), subject.constraint(), stuckTerm.term(), stuckTerm.constraint());
         return Optional.of(stuckTerm);
     }
 

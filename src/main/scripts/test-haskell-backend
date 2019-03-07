@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+set -ueo pipefail
+
+rm -rf haskell-backend-kore
+git clone 'https://github.com/kframework/kore' haskell-backend-kore
+cd haskell-backend-kore
+mkdir -p .build
+cd .build
+cp -r ../../k-distribution/target/release/k ./
+cd ../
+stack build
+make test-k

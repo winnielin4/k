@@ -59,6 +59,17 @@ pipeline {
                     stash name: "bionic", includes: "kframework_5.0.0_amd64.deb"
                   }
                 }
+                stage('Integration Tests') {
+                  parallel {
+                    stage('Haskell Backend') {
+                      steps {
+                        sh '''
+                          ./src/main/scripts/test-haskell-backend
+                        '''
+                      }
+                    }
+                  }
+                }
               }
               post {
                 always {

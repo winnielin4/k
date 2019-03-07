@@ -3,7 +3,9 @@
 require "substitution.k"
 
 module LAMBDA-SEMANTICS
-  imports DOMAINS
+  imports INT
+  imports BOOL
+  imports MAP
   imports SUBSTITUTION
   imports syntax DEFAULT-CONFIGURATION
 

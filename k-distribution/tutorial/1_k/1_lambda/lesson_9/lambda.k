@@ -63,7 +63,9 @@ in our LAMBDA module below. */
 require "substitution.k"
 
 module LAMBDA
-  imports DOMAINS
+  imports INT
+  imports BOOL
+  imports MAP
   imports SUBSTITUTION
 
 /*@ \section{Basic Call-by-value $\lambda$-Calculus}
